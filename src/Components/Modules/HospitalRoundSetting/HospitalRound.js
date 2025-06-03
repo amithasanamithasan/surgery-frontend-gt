@@ -1359,7 +1359,7 @@ const HospitalRound = () => {
               </>
             )}
           </div>
-
+{/* date ribbon start  */}
           <div className="round-list pb-10 pt-[60px] w-[85%] mx-auto flex justify-between select-none">
             <div
               className="prev start-5 top-3 border-none bg-[#657E98] border-2 h-[30px] w-[30px] flex justify-center items-center rounded text-white"
@@ -1403,7 +1403,7 @@ const HospitalRound = () => {
               <FontAwesomeIcon icon={faAngleRight} size="xl" />
             </div>
           </div>
-
+{/* date ribbo End  */}
           {errorMessage && (
             <div className="text-red-500 text-center font-medium mt-5">
               {errorMessage}

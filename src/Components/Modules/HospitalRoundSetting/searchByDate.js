@@ -5,7 +5,13 @@ import MasterNav from "../../Layouts/MasterNav";
 import DeleteModal from "./DeleteModal";
 import WarningModalEdit from "./WarningModalEdit";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircle, faTimes, faCheck } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircle,
+  faTimes,
+  faCheck,
+  faAngleLeft,
+  faAngleRight,
+} from "@fortawesome/free-solid-svg-icons";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Celender1 from "./celender1";
 import WarningModal from "./WarningModal";
@@ -25,20 +31,80 @@ const SearchByDate = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [currentlyDelete, setCurrentlyDelete] = useState(false);
-
+  const [tempFilterEntries, setTempFilterEntries] = useState([]);
   const navigate = useNavigate();
   const dateParam = searchParams.get("date");
 
-  const today = dayjs();
-  const dates = Array.from({ length: 7 }, (_, index) =>
-    today.subtract(index, "day")
-  );
+  const today = dayjs.utc();
+  // const dates = Array.from({ length: 7 }, (_, index) =>
+  //   today.subtract(index, "day")
+  // );
+
   const [selectedEntryId, setSelectedEntryId] = useState(null);
   const [dataEditing, setDataEditing] = useState(false);
   const [warningState, setWarningState] = useState("false");
   const [warning, setWarning] = useState(false);
   const [currentlyEdit, setCurrentlyEdit] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [startDate, setStartDate] = useState(dayjs());
+  const isRightDisabled = selectedDate.isSame(dayjs(), "day");
+  const dates = Array.from({ length: 7 }, (_, i) =>
+    startDate.clone().add(i, "day")
+  );
+  useEffect(() => {
+    const endDate = startDate.clone().add(6, "day");
+    if (selectedDate.isBefore(startDate)) {
+      setStartDate(selectedDate.clone());
+    } else if (selectedDate.isAfter(endDate)) {
+      setStartDate(selectedDate.clone().subtract(6, "day"));
+    }
+    fetchEntrieAll(selectedDate);
+  }, [selectedDate]);
 
+  const handleRight = () => {
+    setSelectedDate((prev) => prev.clone().add(1, "day"));
+  };
+  const handleLeft = () => {
+    setSelectedDate((prev) => prev.clone().subtract(1, "day"));
+  };
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+  };
+
+  // useEffect(() => {
+
+  //   fetchEntrieAll();
+  // }, [selectedDate]);
+  const fetchEntrieAll = () => {
+    AxiosAuthInstance.get(`${Constant.BASE_URL}/hospital-round`)
+      .then((response) => {
+        const allEntries = response.data.map((entry) => ({
+          ...entry,
+          room: String(entry.room).padStart(2, "0"),
+        }));
+        const archivedEntries = allEntries.filter(
+          (entry) => entry.is_archived === 1 || entry.so === 1 || entry.dc === 1
+        );
+        filterEntriesByDate(selectedDate, archivedEntries);
+      })
+      .catch((error) => {
+        console.error("There was an error fetching the entries!", error);
+      });
+  };
+
+  const filterEntriesByDate = (date, entriesToFilter = filterEntries) => {
+    const formattedDate = dayjs(date).format("YYYY-MM-DD");
+    const filtered = entriesToFilter.filter((entry) => {
+      const updatedDateFormatted = dayjs(entry.updated_at).format("YYYY-MM-DD");
+      return dayjs(updatedDateFormatted).isSame(formattedDate, "day");
+    });
+
+    const sortedFilteredEntries = filtered.sort(
+      (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+    );
+    setTempFilterEntries(sortedFilteredEntries);
+  };
   const handleToggleEdit = () => {
     setDataEditing(!dataEditing);
   };
@@ -83,10 +149,11 @@ const SearchByDate = () => {
     }
   };
   // -------------------------------
-  const [selectedDate, setSelectedDate] = useState(
-    //dateParam ? dayjs(dateParam) : today
-    dateParam ? dayjs.utc(dateParam) : dayjs.utc()
-  );
+  // const [selectedDate, setSelectedDate] = useState(
+  //   //dateParam ? dayjs(dateParam) : today
+  //   dateParam ? dayjs.utc(dateParam) : dayjs.utc()
+  // );
+
   // useEffect(() => {
   //   if (dateParam) {
   //     const newDate = dayjs.utc(dateParam);
@@ -619,6 +686,7 @@ const SearchByDate = () => {
             {errorType}
           </div>
         )}
+
         <div
           id="archive"
           className="w-[1200px] 2xl:w-[1400px] mx-auto py-3 relative pt-0 mb-10"
@@ -978,9 +1046,9 @@ const SearchByDate = () => {
               onClick={handlePrint}
               id="hide-print"
               type="button"
-              className="border-none w-[165px] h-[35px] rounded bg-white inter-medium text-[18px] "
+              className="border-none w-[250px] h-[35px] rounded bg-white inter-medium text-[18px] "
             >
-              Print Rounds
+              Print Round
             </button>
             <div className="w-full text-center">
               <h1 className="text-white inter-medium text-[24px]">
@@ -1008,7 +1076,37 @@ const SearchByDate = () => {
               )}
             </p>
           </div>
+          {/* date ribbon start  */}
+          <div className="round-list pb-5 pt-[60px] w-[85%] mx-auto flex justify-between select-none">
+            <div
+              className="prev start-5 top-3 border-none bg-[#657E98] border-2 h-[30px] w-[30px] flex justify-center items-center rounded text-white"
+              onClick={handleLeft}
+            >
+              <FontAwesomeIcon icon={faAngleLeft} size="xl" />
+            </div>
 
+            {dates.map((date, index) => (
+              <div
+                key={index}
+                className={`item-r mx-2 w-[150px] h-[30px] bg-[#B4C6D9]  rounded-md py-1 text-center inter-medium text-[14px] ${
+                  date.isSame(selectedDate, "day")
+                    ? "bg-[#D8ADAD] text-white"
+                    : ""
+                }`}
+                onClick={() => handleDateSelect(date)}
+              >
+                {date.format("MM/DD")}
+              </div>
+            ))}
+
+            <div
+              className="prev start-5 top-3 border-none bg-[#657E98] cursor-pointer border-2 h-[30px] w-[30px] flex justify-center items-center rounded text-white"
+              onClick={handleRight}
+            >
+              <FontAwesomeIcon icon={faAngleRight} size="xl" />
+            </div>
+          </div>
+          {/* date ribbo End  */}
           {/* Table for Filtered Entries */}
           <div id="search">
             <div id="increase-sizes">
@@ -1030,8 +1128,8 @@ const SearchByDate = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filterEntries.length > 0 ? (
-                    filterEntries.map((filterEntry, index) => (
+                  {tempFilterEntries.length > 0 ? (
+                    tempFilterEntries.map((filterEntry, index) => (
                       <tr
                         key={index}
                         className="text-left border-2 inter-medium text-[14px]"

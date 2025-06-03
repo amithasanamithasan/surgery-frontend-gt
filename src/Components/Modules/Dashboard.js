@@ -143,7 +143,7 @@ const Dashboard = () => {
   };
   //Months infinity scroll
   const months = [
-    "Jan.", "Feb.", "Mar.", "Apr.", "May.", "Jun.", "Jul.", "Aug.", "Sept.", "Oct.", "Nov.", "Dec."
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"
   ];
   const [activeIdx, setActiveIdx] = useState(dayjs().month());
   const handlePrev = () => {
