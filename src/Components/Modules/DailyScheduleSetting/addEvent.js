@@ -92,7 +92,7 @@ const AddEvent = ({ onClose, fetchDatas, dates }) => {
     endHour: "08",
     endMinute: "00",
     start_period: "AM",
-    end_period: "PM",
+    end_period: "AM",
     event_note: "",
     event_location: "",
     event_location_text: "",
@@ -105,8 +105,6 @@ const AddEvent = ({ onClose, fetchDatas, dates }) => {
     is_archived: false,
     create_by: false,
   });
-  console.log(formData.endHour);
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -171,6 +169,8 @@ const AddEvent = ({ onClose, fetchDatas, dates }) => {
     const { name, value, type, checked } = e.target;
     const surgeonId = parseInt(value.split("_")[0]);
     const surgeonType = value.split("_")[1];
+
+
     setFormData((prevData) => {
       const newData = { ...prevData };
       if (type === "checkbox" || type === "radio") {
@@ -185,8 +185,45 @@ const AddEvent = ({ onClose, fetchDatas, dates }) => {
           value === "others" ? prevData.event_location_text : "";
       }
 
+      // if (name.startsWith("start")) {
+      //   newData[name] = value;
+      // } else if (name.startsWith("end")) {
+      //   newData[name] = value;
+      // }
       if (name.startsWith("start")) {
-        newData[name] = value;
+        const startHour = newData.startHour;
+        const startMinute = newData.startMinute;
+        const startPeriod = newData.start_period;
+
+        if (startHour && startMinute && startPeriod) {
+          // Convert to 24-hour format
+          let hours = parseInt(startHour, 10);
+          let minutes = parseInt(startMinute, 10);
+          if (startPeriod === "PM" && hours !== 12) hours += 12;
+          if (startPeriod === "AM" && hours === 12) hours = 0;
+
+          // Create date and add 60 minutes (1 hour)
+          const date = new Date();
+          date.setHours(hours);
+          date.setMinutes(minutes);
+          date.setSeconds(0);
+          date.setMilliseconds(0);
+          date.setMinutes(date.getMinutes() + 60);
+
+          // Extract 12-hour format end time
+          let endHour = date.getHours();
+          const endPeriod = endHour >= 12 ? "PM" : "AM";
+          if (endHour === 0) endHour = 12;
+          else if (endHour > 12) endHour -= 12;
+
+          const endMinute = date.getMinutes().toString().padStart(2, '0');
+
+          // Assign end values
+          newData.endHour = endHour.toString().padStart(2, '0');
+          newData.endMinute = endMinute;
+          newData.end_period = endPeriod;
+          console.log(endHour, endMinute);
+        }
       } else if (name.startsWith("end")) {
         newData[name] = value;
       }
@@ -411,34 +448,137 @@ const AddEvent = ({ onClose, fetchDatas, dates }) => {
     };
   }, []);
 
+  // const changePeriod = (type, direction) => {
+  //   const currentPeriod = formData[type];
+  //   const currentIndex = periods.indexOf(currentPeriod);
+  //   const newIndex =
+  //     (currentIndex + direction + periods.length) % periods.length;
+  //   setFormData({ ...formData, [type]: periods[newIndex] });
+  // };
   const changePeriod = (type, direction) => {
     const currentPeriod = formData[type];
     const currentIndex = periods.indexOf(currentPeriod);
-    const newIndex =
-      (currentIndex + direction + periods.length) % periods.length;
-    setFormData({ ...formData, [type]: periods[newIndex] });
+    const newIndex = (currentIndex + direction + periods.length) % periods.length;
+    const newValue = periods[newIndex];
+
+    const updatedForm = {
+      ...formData,
+      [type]: newValue,
+    };
+
+    // Recalculate end time if changing start_period
+    if (type === "start_period") {
+      const { startHour, startMinute } = updatedForm;
+
+      if (startHour && startMinute) {
+        let hours = parseInt(startHour, 10);
+        let minutes = parseInt(startMinute, 10);
+
+        if (newValue === "PM" && hours !== 12) hours += 12;
+        if (newValue === "AM" && hours === 12) hours = 0;
+
+        const date = new Date();
+        date.setHours(hours);
+        date.setMinutes(minutes);
+        date.setSeconds(0);
+        date.setMilliseconds(0);
+        date.setMinutes(date.getMinutes() + 60); // Add 60 minutes
+
+        let endHour = date.getHours();
+        const endPeriod = endHour >= 12 ? "PM" : "AM";
+        if (endHour === 0) endHour = 12;
+        else if (endHour > 12) endHour -= 12;
+
+        const endMinute = date.getMinutes().toString().padStart(2, "0");
+
+        updatedForm.endHour = endHour.toString().padStart(2, "0");
+        updatedForm.endMinute = endMinute;
+        updatedForm.end_period = endPeriod;
+      }
+    }
+
+    setFormData(updatedForm);
   };
-  const increasePeriod = () => changePeriod("start_period", 1);
-  const decreasePeriod = () => changePeriod("start_period", -1);
+
+  // const increasePeriod = () => changePeriod("start_period", 1);
+  // const decreasePeriod = () => changePeriod("start_period", -1);
   const increaseendPeriod = () => changePeriod("end_period", 1);
   const decreaseendPeriod = () => changePeriod("end_period", -1);
+  // const changeTime = (name, valueChange, options) => {
+  //   const currentIndex = options.indexOf(formData[name]);
+  //   const nextIndex =
+  //     (currentIndex + valueChange + options.length) % options.length;
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     [name]: options[nextIndex],
+  //   }));
+  // };
   const changeTime = (name, valueChange, options) => {
     const currentIndex = options.indexOf(formData[name]);
     const nextIndex =
       (currentIndex + valueChange + options.length) % options.length;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: options[nextIndex],
-    }));
+    const newValue = options[nextIndex];
+
+    const updatedForm = {
+      ...formData,
+      [name]: newValue,
+    };
+
+    // If it's a start time change, recalculate end time
+    if (
+      name === "startHour" ||
+      name === "startMinute" ||
+      name === "start_period"
+    ) {
+      const { startHour, startMinute, start_period } = updatedForm;
+
+      if (startHour && startMinute && start_period) {
+        let hours = parseInt(startHour, 10);
+        let minutes = parseInt(startMinute, 10);
+
+        if (start_period === "PM" && hours !== 12) hours += 12;
+        if (start_period === "AM" && hours === 12) hours = 0;
+
+        const date = new Date();
+        date.setHours(hours);
+        date.setMinutes(minutes);
+        date.setSeconds(0);
+        date.setMilliseconds(0);
+        date.setMinutes(date.getMinutes() + 60); // Add 60 minutes
+
+        // Calculate end time
+        let endHour = date.getHours();
+        const endPeriod = endHour >= 12 ? "PM" : "AM";
+        if (endHour === 0) endHour = 12;
+        else if (endHour > 12) endHour -= 12;
+
+        const endMinute = date.getMinutes().toString().padStart(2, "0");
+
+        updatedForm.endHour = endHour.toString().padStart(2, "0");
+        updatedForm.endMinute = endMinute;
+        updatedForm.end_period = endPeriod;
+      }
+    }
+
+    setFormData(updatedForm);
   };
-  const increaseStartHour = () => changeTime("startHour", 1, hours);
-  const decreaseStartHour = () => changeTime("startHour", -1, hours);
-  const increaseStartMinute = () => changeTime("startMinute", 1, minutes);
-  const decreaseStartMinute = () => changeTime("startMinute", -1, minutes);
+
+  // const increaseStartHour = () => changeTime("startHour", 1, hours);
+  // const decreaseStartHour = () => changeTime("startHour", -1, hours);
+  // const increaseStartMinute = () => changeTime("startMinute", 1, minutes);
+  // const decreaseStartMinute = () => changeTime("startMinute", -1, minutes);
   const increaseendHour = () => changeTime("endHour", 1, hours);
   const decreaseendHour = () => changeTime("endHour", -1, hours);
   const increaseendMinute = () => changeTime("endMinute", 1, minutes);
   const decreaseendMinute = () => changeTime("endMinute", -1, minutes);
+
+  const increaseStartHour = () => changeTime("startHour", 1, hours);
+  const decreaseStartHour = () => changeTime("startHour", -1, hours);
+  const increaseStartMinute = () => changeTime("startMinute", 1, minutes);
+  const decreaseStartMinute = () => changeTime("startMinute", -1, minutes);
+  const increasePeriod = () => changePeriod("start_period", 1);
+  const decreasePeriod = () => changePeriod("start_period", -1);
+
 
   return (
     <>
@@ -468,7 +608,6 @@ const AddEvent = ({ onClose, fetchDatas, dates }) => {
                 </button>
               </div>
             </div>
-
             <div className="xl:w-[90%] 2xl:w-[80%] mx-auto lg:py-0 xl:py-[2%] mt-10">
               <div className="grid-item special">
                 <div className="flex flex-col lg:flex-row lg:mx-[2%]">
@@ -518,7 +657,6 @@ const AddEvent = ({ onClose, fetchDatas, dates }) => {
                         </span>
                       </div>
                     </div>
-
                     <div
                       className={`${formData.purpose === "Office"
                         ? "item full-widths m-0"
@@ -977,6 +1115,9 @@ const AddEvent = ({ onClose, fetchDatas, dates }) => {
                         <p className="text-red-800">
                           <small> {errors.start_time[0]} </small>
                         </p>
+                      )}
+                      {errors.time && (
+                        <p className="text-red-500 text-sm mt-1">{errors.time}</p>
                       )}
                     </div>
                     <div className="item full-widths m-0">

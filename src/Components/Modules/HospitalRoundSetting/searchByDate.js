@@ -71,11 +71,6 @@ const SearchByDate = () => {
   const handleDateSelect = (date) => {
     setSelectedDate(date);
   };
-
-  // useEffect(() => {
-
-  //   fetchEntrieAll();
-  // }, [selectedDate]);
   const fetchEntrieAll = () => {
     AxiosAuthInstance.get(`${Constant.BASE_URL}/hospital-round`)
       .then((response) => {
@@ -1048,7 +1043,7 @@ const SearchByDate = () => {
               type="button"
               className="border-none w-[250px] h-[35px] rounded bg-white inter-medium text-[18px] "
             >
-              Print Round
+              Print Rounds
             </button>
             <div className="w-full text-center">
               <h1 className="text-white inter-medium text-[24px]">
@@ -1088,9 +1083,9 @@ const SearchByDate = () => {
             {dates.map((date, index) => (
               <div
                 key={index}
-                className={`item-r mx-2 w-[150px] h-[30px] bg-[#B4C6D9]  rounded-md py-1 text-center inter-medium text-[14px] ${
+                className={`mx-2 w-[150px] h-[30px] bg-[#B4C6D9]  rounded-md py-1 text-center inter-medium text-[14px] ${
                   date.isSame(selectedDate, "day")
-                    ? "bg-[#D8ADAD] text-white"
+                    ? "bg-[#D8ADAD] text-white "
                     : ""
                 }`}
                 onClick={() => handleDateSelect(date)}
