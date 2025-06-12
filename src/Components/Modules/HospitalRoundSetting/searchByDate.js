@@ -71,7 +71,7 @@ const SearchByDate = () => {
   const handleDateSelect = (date) => {
     setSelectedDate(date);
   };
-  const fetchEntrieAll = () => {
+  const fetchEntrieAll = async () => {
     AxiosAuthInstance.get(`${Constant.BASE_URL}/hospital-round`)
       .then((response) => {
         const allEntries = response.data.map((entry) => ({
@@ -81,6 +81,7 @@ const SearchByDate = () => {
         const archivedEntries = allEntries.filter(
           (entry) => entry.is_archived === 1 || entry.so === 1 || entry.dc === 1
         );
+        console.log(archivedEntries);
         filterEntriesByDate(selectedDate, archivedEntries);
       })
       .catch((error) => {

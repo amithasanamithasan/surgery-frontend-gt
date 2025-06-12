@@ -36,7 +36,7 @@ const SearchByDateOL = () => {
   const handleToggleEdit = () => {
     setDataEditing(!dataEditing);
   };
-  // -------------Added-------------
+
   const [newEntry, setNewEntry] = useState({
     room: "",
     first_name: "",
@@ -134,7 +134,7 @@ const SearchByDateOL = () => {
       console.error("Error fetching surgeons:", error);
     }
   };
-  // -------------------------------
+ 
   useEffect(() => {
     fetchSurgeons();
     if (date) {
@@ -244,12 +244,12 @@ const SearchByDateOL = () => {
     `);
     printDocument.close();
 
-    // Wait for the content to be fully loaded
+
     printWindow.onload = () => {
       printWindow.contentWindow.focus();
       printWindow.contentWindow.print();
 
-      // Remove the iframe after printing
+   
       setTimeout(() => {
         document.body.removeChild(printWindow);
       }, 1000);

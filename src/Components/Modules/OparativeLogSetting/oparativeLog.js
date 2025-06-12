@@ -525,10 +525,10 @@ const OparativeLog = () => {
             <div className="flex items-center gap-4 ms-10">
               <p className="inter-medium text-[24px] flex items-center">
                 Operative Log
-                <span className="px-4 text-[10px]">
+                <span className="px-4 text-[10px] w-[12px] inline-block text-center ">
                   <FontAwesomeIcon icon={faCircle} size="xs" />
                 </span>
-                <span className="inter-bold text-[18px]">
+                <span className="inter-bold text-[20px] w-[120px] inline-block ">
                   {selectedDate
                     ? dayjs(selectedDate).format("MM/DD/YYYY")
                     : "No Date Selected"}
