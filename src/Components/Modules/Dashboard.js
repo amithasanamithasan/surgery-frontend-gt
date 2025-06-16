@@ -49,30 +49,28 @@ const Dashboard = () => {
   const fifteenDates = Array.from({ length: 15 }, (_, index) =>
     dayjs().subtract(index, "day")
   );
-
-
+  // fetch user data and unread count for message count in dashboard header 
+  const fetchUserData = async () => {
+    try {
+      const [userResponse, messagesResponse] = await Promise.all([
+        AxiosAuthInstance.get("/current-user"),
+        AxiosAuthInstance.get(`${Constant.BASE_URL}/messages`),
+      ]);
+      setUserRole(userResponse.data.user.role);
+      calculateUnreadCount(messagesResponse.data.received);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      console.error(
+        "Response data:",
+        error.response ? error.response.data : "No response data"
+      );
+      setError("Failed to fetch data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+ // fetch user data and unread count for message count in dashboard header end    
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const [userResponse, messagesResponse] = await Promise.all([
-          AxiosAuthInstance.get("/current-user"),
-          AxiosAuthInstance.get(`${Constant.BASE_URL}/messages`),
-        ]);
-
-        setUserRole(userResponse.data.user.role);
-        calculateUnreadCount(messagesResponse.data.received);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        console.error(
-          "Response data:",
-          error.response ? error.response.data : "No response data"
-        );
-        setError("Failed to fetch data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUserData();
   }, []);
 

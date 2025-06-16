@@ -1101,7 +1101,7 @@ const DailySchedule = () => {
         {/*end daily schedule Data */}
       </div>
 
-      {/* ----------------Modal--------------- */}
+  
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="pt-8 rounded relative">
