@@ -167,13 +167,13 @@ const DailySchedule = () => {
 
       // Custom surgeon name order
       // const customSurgeonOrder = ['Brian Myers', 'Ahmad Nuriddin', 'Jose Fernandez', 'Reema Mallick'];
-      // const customSurgeonOrder = ['Sharif Khan', 'Musfiquer', 'Oleraj Hossin', 'Rajib Chowdhury'];
-      const customSurgeonOrder = [
-        "Dr. Myers",
-        "Dr. Mallick",
-        "Dr. Nuriddin",
-        "Dr. Fernandez",
-      ];
+      const customSurgeonOrder = ['Sharif Khan', 'Musfiquer', 'Oleraj Hossin', 'Rajib Chowdhury'];
+      // const customSurgeonOrder = [
+      //   "Dr. Myers",
+      //   "Dr. Mallick",
+      //   "Dr. Nuriddin",
+      //   "Dr. Fernandez",
+      // ];
 
       // Sort the surgeons list based on the custom order
       const sortedSurgeons = customSurgeonOrder
@@ -909,7 +909,6 @@ const DailySchedule = () => {
             <Calendar
               isCalendarOpen={isCalendarOpen}
               setIsCalendarOpen={setIsCalendarOpen}
-              selectedDate = {selectedDate}
             />
           </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Constant from "../../../Constant";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { AxiosAuthInstance } from "../../../AxiosInterceptors";
 import MasterNav from "../../Layouts/MasterNav";
 import OperationsToDate from "./operationsToDate ";
@@ -33,6 +33,10 @@ const SearchByDateOL = () => {
   const [warning, setWarning] = useState(false);
   const [warningState, setWarningState] = useState("false");
   const [something, setSomething] = useState("false");
+  const dated = query.get("date");
+  const [selectedDate, setSelectedDate] = useState(
+    dated ? dayjs.utc(dated) : dayjs.utc()
+  );
   const handleToggleEdit = () => {
     setDataEditing(!dataEditing);
   };
@@ -141,6 +145,11 @@ const SearchByDateOL = () => {
       fetchData(date);
     }
   }, [date]);
+  const handleDateSelect = (date) => {
+    const dateformat = date.toISOString ? date.toISOString().split('T')[0] : dayjs(date).format("YYYY-MM-DD");
+    Navigate(`/daily-schedule-search-by-date?date=${dateformat}`);
+    setSelectedDate(dayjs(date));
+  };
 
   const fetchData = (date) => {
     AxiosAuthInstance.get(
@@ -293,6 +302,8 @@ const SearchByDateOL = () => {
                 <Celender
                   isCalendarOpen={isCalendarOpen}
                   setIsCalendarOpen={setIsCalendarOpen}
+                  selectedDate={selectedDate}
+                  onDateSelect={handleDateSelect}
                 />
               </>
             ) : (

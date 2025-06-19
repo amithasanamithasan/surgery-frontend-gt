@@ -4,12 +4,30 @@ import dayjs from "dayjs";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
-const Celender = ({ isCalendarOpen, setIsCalendarOpen }) => {
-  const [selectedCalenderDate, setSelectedCalenderDate] = useState(new Date());
+const Celender = ({ isCalendarOpen, selectedDate, setIsCalendarOpen }) => {
+  const [selectedCalenderDate, setSelectedCalenderDate] = useState(new Date(selectedDate));
+
+  // const [selectedCalenderDate, setSelectedCalenderDate] = useState(() => {
+  //   if (selectedDate) {
+  //     return selectedDate.toDate ? selectedDate.toDate() : new Date(selectedDate);
+  //   }
+  //   const storedDate = localStorage.getItem('selectedCalendarDate');
+  //   return storedDate ? new Date(storedDate) : new Date();
+  // });
+
+  // useEffect(() => {
+  //   if (selectedDate) {
+  //     const newDate = selectedDate.toDate ? selectedDate.toDate() : new Date(selectedDate);
+  //     setSelectedCalenderDate(newDate);
+  //   }
+  // }, [selectedDate]);
+
   const navigate = useNavigate();
   const calendarRef = useRef(null);
+
   const handleDateSelect = (date) => {
     setSelectedCalenderDate(date);
+    // localStorage.setItem('selectedCalendarDate', date.toISOString());
   };
 
   const handleSearchDateSubmit = (e) => {

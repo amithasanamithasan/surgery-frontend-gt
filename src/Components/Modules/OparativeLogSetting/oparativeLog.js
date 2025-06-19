@@ -525,10 +525,10 @@ const OparativeLog = () => {
             <div className="flex items-center gap-4 ms-10">
               <p className="inter-medium text-[24px] flex items-center">
                 Operative Log
-                <span className="px-4 text-[10px] w-[12px] inline-block text-center ">
+                <span className="px-4 text-[10px]">
                   <FontAwesomeIcon icon={faCircle} size="xs" />
                 </span>
-                <span className="inter-bold text-[20px] w-[120px] inline-block ">
+                <span className="inter-bold text-[18px]">
                   {selectedDate
                     ? dayjs(selectedDate).format("MM/DD/YYYY")
                     : "No Date Selected"}
@@ -567,6 +567,7 @@ const OparativeLog = () => {
                   <Celender
                     isCalendarOpen={isCalendarOpen}
                     setIsCalendarOpen={setIsCalendarOpen}
+                  // selectedDates={selectedDate}
                   />
                 </>
               ) : (
@@ -599,9 +600,8 @@ const OparativeLog = () => {
             {dates.map((date, index) => (
               <div
                 key={index}
-                className={`item-r mx-2 w-[150px] h-[30px] bg-[#B4C6D9] cursor-pointer rounded-md py-1 text-center inter-medium text-[14px] ${
-                  dayjs(date).isSame(selectedDate, "day") ? "active" : ""
-                }`}
+                className={`item-r mx-2 w-[150px] h-[30px] bg-[#B4C6D9] cursor-pointer rounded-md py-1 text-center inter-medium text-[14px] ${dayjs(date).isSame(selectedDate, "day") ? "active" : ""
+                  }`}
                 onClick={() => handleDateSelect(date)}
               >
                 {dayjs(date).format("MM/DD")}
@@ -836,6 +836,194 @@ const OparativeLog = () => {
                   )
                 ) : (
                   <tr></tr>
+                )}
+                {isAdd && (
+                  <tr className="text-left border-2 inter-medium text-[14px]">
+                    <td style={{ verticalAlign: "top" }}>
+                      <input
+                        type="text"
+                        name="first_name"
+                        // placeholder="First name"
+                        className="w-[80px] mt-[5px] border-2 border-[#000] h-[80px] text-center"
+                        value={newEntry.first_name}
+                        onChange={handleInputChange}
+                        required
+                      />
+                      {errors && errors.first_name && (
+                        <p className="text-red-800">
+                          <small> {errors.first_name[0]} </small>
+                        </p>
+                      )}
+                    </td>
+                    <td style={{ verticalAlign: "top" }}>
+                      <input
+                        type="text"
+                        name="last_name"
+                        className="w-[80px] h-[80px] mt-[5px] border-2 border-[#000] text-center"
+                        // placeholder="Last name"
+                        value={newEntry.last_name}
+                        onChange={handleInputChange}
+                        required
+                      />
+                      {errors && errors.last_name && (
+                        <p className="text-red-800">
+                          <small> {errors.last_name[0]} </small>
+                        </p>
+                      )}
+                    </td>
+                    <td style={{ verticalAlign: "top" }}>
+                      <input
+                        type="text"
+                        name="mrn"
+                        className="w-[80px] h-[80px] mt-[5px] border-2 border-[#000] text-center"
+                        // placeholder="MRN No."
+                        value={newEntry.mrn}
+                        onChange={handleInputChange}
+                        required
+                      />
+                      {errors && errors.mrn && (
+                        <p className="text-red-800">
+                          <small> {errors.mrn[0]} </small>
+                        </p>
+                      )}
+                    </td>
+                    <td style={{ verticalAlign: "center" }}>
+                      <select
+                        name="surgeon"
+                        className="w-[80px] h-[20px] mt-[5px]   text-center"
+                        value={newEntry.surgeon}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="" disabled>
+                          Select
+                        </option>
+                        {surgeons.map((surgeon) => (
+                          <option key={surgeon.id} value={surgeon.id}>
+                            {surgeon.initial}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.surgeon && (
+                        <span className="text-red-800">
+                          <small>{errors.surgeon[0]}</small>
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ verticalAlign: "center" }}>
+                      <select
+                        name="assistant"
+                        className="w-[80px] h-[20px] mt-[5px]  text-center"
+                        value={newEntry.assistant}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="" disabled>
+                          Select
+                        </option>
+                        <option value="0">NONE </option>
+                        {surgeons.map((assistant) => (
+                          <option key={assistant.id} value={assistant.id}>
+                            {assistant.initial}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.assistant && (
+                        <p className="text-red-800">
+                          <small>{errors.assistant[0]}</small>
+                        </p>
+                      )}
+                    </td>
+                    <td style={{ verticalAlign: "top" }}>
+                      <textarea
+                        name="diagnosis"
+                        className="w-[250px] 2xl:w-[340px] h-[80px] mt-[5px]  border-[1px] border-[#000] overflow-hidden bg-white formx padding"
+                        placeholder="Diagnosis"
+                        value={newEntry.diagnosis}
+                        onChange={handleInputChange}
+                        required
+                      ></textarea>
+                      {errors && errors.diagnosis && (
+                        <p className="text-red-800">
+                          <small> {errors.diagnosis[0]} </small>
+                        </p>
+                      )}
+                    </td>
+                    <td style={{ verticalAlign: "top" }}>
+                      <textarea
+                        className="w-[250px] 2xl:w-[340px] h-[80px] mt-[5px] border-[1px] border-[#000] overflow-hidden bg-white formx padding"
+                        placeholder="Procedure"
+                        name="procedure"
+                        value={newEntry.procedure}
+                        onChange={handleInputChange}
+                        required
+                      ></textarea>
+                      {errors && errors.procedure && (
+                        <p className="text-red-800">
+                          <small> {errors.procedure[0]} </small>
+                        </p>
+                      )}
+                    </td>
+                    <td style={{ verticalAlign: "top" }}>
+                      <input
+                        type="text"
+                        className="w-[80px] h-[80px] mt-[5px]  border-[1px] border-[#000] text-center"
+                        name="facility"
+                        value={newEntry.facility}
+                        onChange={handleInputChange}
+                        required
+                      />
+                      {errors && errors.facility && (
+                        <p className="text-red-800">
+                          <small> {errors.facility[0]} </small>
+                        </p>
+                      )}
+                      {isEditings && (
+                        <div className="absolute top-[12px] right-[-60px] flex flex-col gap-2 items-center">
+                          <button
+                            className="bg-[#58D68D] border-2 border-white px-2 py-1 rounded-md drop-shadow hover:bg-[#52BE80]"
+                            onClick={handleSubmit}
+                          >
+                            <FontAwesomeIcon icon={faCheck} size="lg" />
+                          </button>
+                          <button
+                            className="bg-[#EC7063] border-2 border-white px-2 py-1 rounded-md drop-shadow hover:bg-[#E74C3C]"
+                            onClick={() => {
+                              handleClearForm();
+                              setSomething(false);
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faTimes} size="lg" />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                )}
+
+                {dayjs(selectedDate).isSame(today, "day") && !isAdd && !isEditings && (
+                  <tr className="text-left border-2 inter-medium text-[14px]">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                      {(userRole === 1 || userRole === 3 || userRole === 2) && (
+                        <button
+                          className="drop-shadow-2xl w-[190px] h-[40px] absolute left-[50%] top-[50%] transform-translate-50 text-center bg-white cursor-pointer rounded-md hover:bg-[#657E98] hover:text-white"
+                          onClick={() => {
+                            setIsAdd(true);
+                            setIsEditings(true);
+                          }}
+                        >
+                          Add New Entry
+                        </button>
+                      )}
+                    </td>
+                    <td></td>
+                    <td></td>
+                  </tr>
                 )}
               </tbody>
             </table>

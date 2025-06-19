@@ -22,7 +22,7 @@ dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 const SearchByDateDs = () => {
   const [showModal, setShowModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(dayjs().utc());
+  // const [selectedDate, setSelectedDate] = useState(dayjs().utc());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [schedule, setSchedule] = useState([]);
   const [surgeons, setSurgeons] = useState([]);
@@ -38,13 +38,71 @@ const SearchByDateDs = () => {
   const [adjustomPm, setAdjustomPm] = useState([]);
   const query = new URLSearchParams(location.search);
   const date = query.get("date");
+  const dated = query.get("date");
   const [loading, setLoading] = useState(true);
-  const daysInMonth = selectedDate.daysInMonth();
-  const daysArray = Array.from({ length: daysInMonth }, (_, index) =>
-    selectedDate.utc().startOf("month").add(index, "day")
+  const [selectedDate, setSelectedDate] = useState(
+    dated ? dayjs.utc(dated) : dayjs.utc()
   );
+  const daysInMonth = selectedDate.daysInMonth();
+  // const daysArray = Array.from({ length: daysInMonth }, (_, index) =>
+  //   selectedDate.utc().startOf("month").add(index, "day")
+  // );
+
+  const [windowSize, setWindowSize] = useState(5);
+  useEffect(() => {
+    const updateWindowSize = () => {
+      const width = window.innerWidth;
+      if (width < 500) {
+        setWindowSize(2);
+      } else if (width < 1024) {
+        setWindowSize(5);
+      } else {
+        setWindowSize(15);
+      }
+    };
+    updateWindowSize();
+    window.addEventListener("resize", updateWindowSize);
+    return () => window.removeEventListener("resize", updateWindowSize);
+  }, []);
+
+  // const [startDate, setStartDate] = useState(dayjs());
+
+  const initialDate = dated ? dayjs(dated) : dayjs();
+  const [startDate, setStartDate] = useState(initialDate);
+
+  const daysArray = Array.from({ length: windowSize }, (_, i) =>
+    startDate.clone().add(i, "day")
+  );
+
+  useEffect(() => {
+    if (dated) {
+      const newSelected = dayjs(dated);
+      setSelectedDate(newSelected);
+    }
+  }, [dated]);
+
+  useEffect(() => {
+    const endDate = startDate.clone().add(windowSize - 1, "day");
+    if (selectedDate.isBefore(startDate)) {
+      setStartDate(selectedDate.clone());
+    } else if (selectedDate.isAfter(endDate)) {
+      setStartDate(selectedDate.clone().subtract(windowSize - 1, "day"));
+    }
+  }, [selectedDate]);
+
+
+  const scrollLeft = () => {
+    setStartDate((prev) => prev.clone().subtract(1, "day"));
+  };
+
+  const scrollRight = () => {
+    setStartDate((prev) => prev.clone().add(1, "day"));
+  };
+
   const handleDateSelect = (date) => {
-    setSelectedDate(date);
+    const dateformat = date.toISOString ? date.toISOString().split('T')[0] : dayjs(date).format("YYYY-MM-DD");
+    navigate(`/daily-schedule-search-by-date?date=${dateformat}`);
+    setSelectedDate(dayjs(date));
   };
 
   // Fetch Data
@@ -371,9 +429,8 @@ const SearchByDateDs = () => {
             event.event_location === "others"
               ? event.event_location_text
               : event.event_location ?? "";
-          eventData.patient_name = `${event.patient_first_name || ""} ${
-            event.patient_last_name || ""
-          }`;
+          eventData.patient_name = `${event.patient_first_name || ""} ${event.patient_last_name || ""
+            }`;
           eventData.procedure = event.procedure || "";
           eventData.patient_mrn = `${event.patient_mrn || ""}`;
           if (event.event_location === "PHH MOR") {
@@ -426,8 +483,8 @@ const SearchByDateDs = () => {
                   localStorage.role == 3
                     ? "#"
                     : overlap?.id
-                    ? `${overlap.id}`
-                    : "#"
+                      ? `${overlap.id}`
+                      : "#"
                 }
                 diable={localStorage.role == 3 ? true : false}
                 border=""
@@ -560,8 +617,8 @@ const SearchByDateDs = () => {
               localStorage.role == 3
                 ? "#"
                 : adjustomPm?.AM?.id
-                ? `${adjustomPm.AM.id}`
-                : "#"
+                  ? `${adjustomPm.AM.id}`
+                  : "#"
             }
             diable={localStorage.role == 3 ? true : false}
             adjust={true}
@@ -599,8 +656,8 @@ const SearchByDateDs = () => {
               localStorage.role == 3
                 ? "#"
                 : adjustomPm?.AM?.id
-                ? `${adjustomPm.AM.id}`
-                : "#"
+                  ? `${adjustomPm.AM.id}`
+                  : "#"
             }
             diable={localStorage.role == 3 ? true : false}
             adjust={true}
@@ -887,7 +944,36 @@ const SearchByDateDs = () => {
             <Calendar
               isCalendarOpen={isCalendarOpen}
               setIsCalendarOpen={setIsCalendarOpen}
+              selectedDate={selectedDate}
+              onDateSelect={handleDateSelect}
             />
+          </div>
+          <div className="surgery-schedule relative pt-[15px] select-none">
+            <div className="flex bg-white rounded-xl py-4 px-5 justify-between overflow-hidden">
+              <FontAwesomeIcon
+                icon={faAngleLeft}
+                size="xl"
+                className="item px-2 py-1 rounded-md inter-medium content-center bg-[#657E98] text-white"
+                onClick={scrollLeft}
+              />
+              {daysArray.map((date) => (
+                <div
+                  key={date.toISOString()}
+                  onClick={() => handleDateSelect(date)}
+                  className={`item border-2 border-black sm:px-2 lg:px-1 2xl:px-2 py-1 rounded-md inter-medium text-[14px] content-center ${
+                    date.isSame(selectedDate, "day") ? "active" : ""
+                  }`}
+                >
+                  {date.utc().format("MM/DD")}
+                </div>
+              ))}
+              <FontAwesomeIcon
+                icon={faAngleRight}
+                size="xl"
+                className="item px-2 py-1 rounded-md inter-medium content-center bg-[#657E98] text-white"
+                onClick={scrollRight}
+              />
+            </div>
           </div>
         </div>
         {/*daily schedule Data */}
@@ -899,9 +985,9 @@ const SearchByDateDs = () => {
           <div className="bg-white w-100 px-2 2xl:px-10 rounded-md pb-10 shadow-lg">
             {/* {schedule.length === 0 && omPm.surgeon_o_am.length == 0 && omPm.surgeon_o_pm.length === 0 && vacations.length === 0 ? ( */}
             {(schedule?.length ?? 0) &&
-            (omPm?.surgeon_o_am?.length ?? 0) &&
-            (omPm?.surgeon_o_pm?.length ?? 0) &&
-            (vacations?.length ?? 0) ? (
+              (omPm?.surgeon_o_am?.length ?? 0) &&
+              (omPm?.surgeon_o_pm?.length ?? 0) &&
+              (vacations?.length ?? 0) ? (
               <p className="text-center text-[18px] inter-bold py-5">
                 Data are not available on this date
               </p>
@@ -974,9 +1060,8 @@ const SearchByDateDs = () => {
                         return (
                           <tr key={time}>
                             <td
-                              className={`2xl:w-[100px] sticky left-[-10px] z-[3] h-[30px] text-right whitespace-nowrap ${
-                                isBold ? "font-bold" : ""
-                              }`}
+                              className={`2xl:w-[100px] sticky left-[-10px] z-[3] h-[30px] text-right whitespace-nowrap ${isBold ? "font-bold" : ""
+                                }`}
                             >
                               <p className={`${isHidden ? "hidden" : ""}`}>
                                 {formattedTime}

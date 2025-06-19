@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 const Celender = ({ isCalendarOpen, setIsCalendarOpen }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const date = query.get("date");
+  const [selectedDate, setSelectedDate] = useState(date ? dayjs(date).toDate() : new Date());
   const navigate = useNavigate();
   const calendarRef = useRef(null);
   const handleDateSelect = (date) => {

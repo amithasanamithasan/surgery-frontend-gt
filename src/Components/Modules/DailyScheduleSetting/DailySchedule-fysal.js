@@ -58,7 +58,6 @@ const DailySchedule = () => {
     return () => window.removeEventListener("resize", updateWindowSize);
   }, []);
 
-  const [startDate, setStartDate] = useState(dayjs());
   const halfWindow = Math.floor(windowSize / 2);
   const [startOffset, setStartOffset] = useState(-Math.floor(windowSize / 2));
   const toggleCalendar = () => {
@@ -80,27 +79,19 @@ const DailySchedule = () => {
   //   setSelectedDate((prev) => prev.add(1, "day"));
   // };
   const daysArray = Array.from({ length: windowSize }, (_, i) =>
-    startDate.clone().add(i, "day")
+    selectedDate.utc().add(startOffset + i, "day")
   );
-  useEffect(() => {
-    const endDate = startDate.clone().add(14, "day");
-    if (selectedDate.isBefore(startDate)) {
-      setStartDate(selectedDate.clone());
-    } else if (selectedDate.isAfter(endDate)) {
-      setStartDate(selectedDate.clone().subtract(14, "day"));
-    }
-  }, [selectedDate]);
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    setStartOffset(-Math.floor(windowSize / 2));
+  };
 
   const scrollLeft = () => {
-    setStartDate((prev) => prev.clone().subtract(1, "day"));
+    setStartOffset((prev) => prev - windowSize);
   };
 
   const scrollRight = () => {
-    setStartDate((prev) => prev.clone().add(1, "day"));
-  };
-
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
+    setStartOffset((prev) => prev + windowSize);
   };
 
   const fetchData = async () => {
@@ -388,8 +379,9 @@ const DailySchedule = () => {
             event.event_location === "others"
               ? event.event_location_text
               : event.event_location ?? "";
-          eventData.patient_name = `${event.patient_first_name || ""} ${event.patient_last_name || ""
-            }`;
+          eventData.patient_name = `${event.patient_first_name || ""} ${
+            event.patient_last_name || ""
+          }`;
           eventData.patient_mrn = `${event.patient_mrn || ""}`;
           eventData.procedure = event.procedure || "";
           if (event.event_location === "PHH MOR") {
@@ -475,8 +467,8 @@ const DailySchedule = () => {
                   localStorage.role == 3
                     ? "#"
                     : overlap?.id
-                      ? `${overlap.id}`
-                      : "#"
+                    ? `${overlap.id}`
+                    : "#"
                 }
                 diable={localStorage.role == 3 ? true : false}
                 border=""
@@ -595,8 +587,8 @@ const DailySchedule = () => {
               localStorage.role == 3
                 ? "#"
                 : adjustomPm?.AM?.id
-                  ? `${adjustomPm.AM.id}`
-                  : "#"
+                ? `${adjustomPm.AM.id}`
+                : "#"
             }
             diable={localStorage.role == 3 ? true : false}
             //link={adjustomPm?.AM?.id ? `${adjustomPm.AM.id}` : "#"}
@@ -636,8 +628,8 @@ const DailySchedule = () => {
               localStorage.role == 3
                 ? "#"
                 : adjustomPm?.AM?.id
-                  ? `${adjustomPm.AM.id}`
-                  : "#"
+                ? `${adjustomPm.AM.id}`
+                : "#"
             }
             diable={localStorage.role == 3 ? true : false}
             //link={adjustomPm?.PM?.id ? `${adjustomPm.PM.id}` : "#"}
@@ -909,7 +901,8 @@ const DailySchedule = () => {
             <Calendar
               isCalendarOpen={isCalendarOpen}
               setIsCalendarOpen={setIsCalendarOpen}
-              selectedDate = {selectedDate}
+              selectedDate={selectedDate}
+              onDateSelect={handleDateSelect}
             />
           </div>
 
@@ -925,8 +918,9 @@ const DailySchedule = () => {
                 <div
                   key={date.toISOString()}
                   onClick={() => handleDateSelect(date)}
-                  className={`item border-2 border-black sm:px-2 lg:px-1 2xl:px-2 py-1 rounded-md inter-medium text-[14px] content-center ${date.isSame(selectedDate.utc(), "day") ? "active" : ""
-                    }`}
+                  className={`item border-2 border-black sm:px-2 lg:px-1 2xl:px-2 py-1 rounded-md inter-medium text-[14px] content-center ${
+                    date.isSame(selectedDate.utc(), "day") ? "active" : ""
+                  }`}
                 >
                   {date.utc().format("MM/DD")}
                 </div>
@@ -953,8 +947,9 @@ const DailySchedule = () => {
               {daysArray.map((date) => (
                 <div
                   key={date.toISOString()}
-                  className={`item border-2 border-black px-2 py-1 rounded-md inter-medium text-[14px] content-center ${date.isSame(selectedDate, "day") ? "active" : ""
-                    }`}
+                  className={`item border-2 border-black px-2 py-1 rounded-md inter-medium text-[14px] content-center ${
+                    date.isSame(selectedDate, "day") ? "active" : ""
+                  }`}
                   onClick={() => handleDateSelect(date)}
                 >
                   {date.format("MM/DD")}
@@ -981,8 +976,9 @@ const DailySchedule = () => {
               {daysArray.map((date) => (
                 <div
                   key={date.toISOString()}
-                  className={`item border-2 border-black px-2 py-1 rounded-md inter-medium text-[14px] content-center ${date.isSame(selectedDate, "day") ? "active" : ""
-                    }`}
+                  className={`item border-2 border-black px-2 py-1 rounded-md inter-medium text-[14px] content-center ${
+                    date.isSame(selectedDate, "day") ? "active" : ""
+                  }`}
                   onClick={() => handleDateSelect(date)}
                 >
                   {date.format("MM/DD")}
@@ -1059,8 +1055,9 @@ const DailySchedule = () => {
                     return (
                       <tr key={time}>
                         <td
-                          className={`2xl:w-[100px]  sticky left-[-10px] z-[3] whitespace-nowrap h-[30px] text-right ${isBold ? "font-bold" : ""
-                            }`}
+                          className={`2xl:w-[100px]  sticky left-[-10px] z-[3] whitespace-nowrap h-[30px] text-right ${
+                            isBold ? "font-bold" : ""
+                          }`}
                         >
                           <p className={`${isHidden ? "hidden" : ""}`}>
                             {formattedTime}
@@ -1106,7 +1103,7 @@ const DailySchedule = () => {
         {/*end daily schedule Data */}
       </div>
 
-      {/* ----------------Modal--------------- */}
+  
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="pt-8 rounded relative">
