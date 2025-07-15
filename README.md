@@ -11,60 +11,166 @@ In the project directory, you can run:
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+# 🛠️ Surgery South – Punch List (05.15.25)
 
-### `npm test`
+> Live Dashboard: [https://sergiom175.sg-host.com/dashboard](https://sergiom175.sg-host.com/dashboard)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+This punch list outlines known issues, UI/UX changes, and feature improvements for the Surgery South application across its modules.
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📅 Hospital Rounds
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- [ ] **Print Rounds Button**
+  - Add to **both active and archived** hospital rounds.
+  - Should compress vertically (reduce padding/margin).
+  - S/O and D/C buttons are causing excessive vertical space – resolve this.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- [ ] **Date Ribbon Visibility**
+  - On "Day View" (after selecting a date), the date ribbon disappears. This should **stay visible**.
 
-### `npm run eject`
+- [ ] **BUG: Add Entry Issue**
+  - Hard to replicate. If it happens again, please capture a screenshot.
+  
+- [ ] **Archived Rounds**
+  - Add **scroll arrows** to the date ribbon.
+  - Should **not allow navigation past today's date**.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 📝 Operative Log
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- [ ] **Print Button**
+  - Should only print the operative log section.
+  - Do **not include ops-to-date section**.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- [ ] **Scrolling Arrows**
+  - Add scroll arrows to the date ribbon for **infinite scroll** behavior.
 
-## Learn More
+- [ ] **Alignment**
+  - Fields (e.g., on 5/5) should be **top-aligned** in cells.
+  - *Diagnosis* and *Procedure* are correct.
+  - OK to keep fields horizontally centered.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🗓️ Daily Surgery Schedule
 
-### Code Splitting
+- [ ] **Surgeon Display Order**
+  - Current order is incorrect.
+  - Target Order:
+    1. Myers
+    2. Nurddin
+    3. Ferrandez
+    4. Mallick
+  - ⚠️ Manual reordering in the backend is required.
+  - Please avoid requiring the client to delete/re-enter surgeons. If possible, implement a manual reordering backend tool.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## 🚨 Header Bar (OR View)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- [ ] Stack the **Title + Date** cleanly.
+- [ ] Add infinite scroll in the date ribbon.
+  - Currently can’t scroll past 5/01 — must be able to go **both backward and forward indefinitely**.
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 📊 Timeline (OR View)
 
-### Advanced Configuration
+- [ ] Reduce row height.
+  - Remove `:15` and `:45` time markers.
+  - Keep 4 grey lines/hour for reference.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- [ ] Surgeon names should shift up to remove white space.
 
-### Deployment
+- [ ] **Print Button**
+  - Should appear in the top bar next to date selection.
+  - Print only the main white-space column schedule view.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## 🎨 Calendar Colors and Event Layout
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [ ] **Change Colors**
+  - MOR = Light Blue
+  - OFFICE = Light Green
+
+- [ ] **Remove DR Name** in “Meetings” cells.
+
+- [ ] **Scrolling Arrows**
+  - On date select view, arrows must **still appear**.
+  - This is **mandatory**, not optional based on the template.
+
+---
+
+## 🐞 OR View Bugs
+
+- [ ] **Data Load Bug (4/30)**
+  - Going directly to a selected date sometimes fails to load.
+  - Reloading the dashboard fixes it — investigate root cause.
+
+- [ ] **Event Display Format**
+  - Event records on calendar should show (in order):
+    - Patient Name
+    - MRN
+    - Procedure
+
+- [ ] **Office Event Records**
+  - Should show **Office / Notes content**
+
+---
+
+## ➕ Add New Event
+
+- [ ] Make **all fields optional**, no required fields.
+- [ ] Set default end time = start time + 1 hour.
+  - Still allow manual override of end time.
+
+---
+
+## 🗓️ Monthly Call Calendar
+
+- [ ] **Edit Calendar**
+  - Remove "Office Hours" from Sat/Sun.
+
+- [ ] **Time Off Behavior**
+  - Default end date = same as start.
+  - Can still be manually adjusted.
+
+- [ ] **Calendar Ribbon UI**
+  - Remove **dots** and **month text** from ribbon.
+  - PTO (vacation, holiday, CE) = **pink** highlight.
+
+- [ ] **Print Calendar**
+  - Ensure all cells are **uniform size**
+  - Ensure print-friendliness (flat layout, clean colors)
+
+---
+
+## 🔐 Domain + Data Consistency
+
+- [ ] **Domain**: surgerysouth.com – ensure it resolves to production dashboard.
+
+- [x] ✅ **Q1 Resolved** – Misloaded page on 5/15 was temporarily resolved. Must **prevent** this from happening again.
+- [ ] **Q2 Actionable** – If Add Entry bug reappears, capture screenshot.
+- [x] ✅ **Q3 Resolved** – Ribbon display formatting clarified and fixed.
+
+---
+
+## ✅ Completed Tasks
+
+- [x] Meeting DR name removed.
+- [x] Dot removed from calendar ribbon.
+- [x] Surgeon DR order discussion addressed.
+
+---
+
+## 📌 Notes for Devs
+
+> If using Git, commit this `README.md` to the repo root.
+
+```bash
+git add README.md
+git commit -m "Add punch list and QA notes for 05.15.25"
+git push origin main
