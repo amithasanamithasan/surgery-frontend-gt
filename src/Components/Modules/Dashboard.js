@@ -31,6 +31,34 @@ const Dashboard = () => {
   // const [visibleStartIndex, setVisibleStartIndex] = useState(
   //   selectedDates.date() - 1
   // );
+
+  //Infinite Scroll
+  const [startDate, setStartDate] = useState(dayjs());
+  const [selectedDateScroll, setSelectedDateScroll] = useState(dayjs());
+  const visibleDays = Array.from({ length: 15 }, (_, i) =>
+    // startDate.add(i, "day")
+    startDate.clone().add(i, "day")
+  );
+  const scrollLeftSchedule = () => {
+    if (selectedDateScroll.isSame(startDate, "day")) {
+      setStartDate((prev) => prev.clone().subtract(1, "day"));
+      setSelectedDateScroll((prev) => prev.clone().subtract(1, "day"));
+    } else {
+      setSelectedDateScroll((prev) => prev.clone().subtract(1, "day"));
+    }
+  };
+
+  const scrollRightSchedule = () => {
+    const rightmostDate = startDate.clone().add(14, "day");
+
+    if (selectedDateScroll.isSame(rightmostDate, "day")) {
+      setStartDate((prev) => prev.clone().add(1, "day"));
+      setSelectedDateScroll((prev) => prev.clone().add(1, "day"));
+    } else {
+      setSelectedDateScroll((prev) => prev.clone().add(1, "day"));
+    }
+  };
+
   console.log("Selected: " + dayjs.utc());
   const [visibleStartIndex, setVisibleStartIndex] = useState(() => {
     const initialIndex = dayjs().date() - 1;
@@ -38,6 +66,7 @@ const Dashboard = () => {
   });
   const scrollLeft = () => {
     setVisibleStartIndex((prev) => Math.max(prev - 15, 0));
+     
   };
   const scrollRight = () => {
     setVisibleStartIndex((prev) => Math.min(prev + 15, daysInMonth - 15));
@@ -49,28 +78,29 @@ const Dashboard = () => {
   const fifteenDates = Array.from({ length: 15 }, (_, index) =>
     dayjs().subtract(index, "day")
   );
-  // fetch user data and unread count for message count in dashboard header 
-  const fetchUserData = async () => {
-    try {
-      const [userResponse, messagesResponse] = await Promise.all([
-        AxiosAuthInstance.get("/current-user"),
-        AxiosAuthInstance.get(`${Constant.BASE_URL}/messages`),
-      ]);
-      setUserRole(userResponse.data.user.role);
-      calculateUnreadCount(messagesResponse.data.received);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      console.error(
-        "Response data:",
-        error.response ? error.response.data : "No response data"
-      );
-      setError("Failed to fetch data.");
-    } finally {
-      setLoading(false);
-    }
-  };
- // fetch user data and unread count for message count in dashboard header end    
+
   useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const [userResponse, messagesResponse] = await Promise.all([
+          AxiosAuthInstance.get("/current-user"),
+          AxiosAuthInstance.get(`${Constant.BASE_URL}/messages`),
+        ]);
+
+        setUserRole(userResponse.data.user.role);
+        calculateUnreadCount(messagesResponse.data.received);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        console.error(
+          "Response data:",
+          error.response ? error.response.data : "No response data"
+        );
+        setError("Failed to fetch data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchUserData();
   }, []);
 
@@ -135,21 +165,59 @@ const Dashboard = () => {
     navigate(`/daily-schedule-search-by-date?date=${formattedDate}`);
   };
 
+  const [activeMonth, setActiveMonth] = useState(dayjs().month());
+  const [activeYear, setActiveYear] = useState(dayjs().year());
   const handleMontlySchedule = (monthIndex) => {
-    const formattedDate = dayjs.utc().set("month", monthIndex).startOf('month').format("YYYY-MM-DD");
+    const formattedDate = dayjs
+      .utc()
+      .set("month", monthIndex)
+      .set("year", activeYear)
+      .startOf("month")
+      .format("YYYY-MM-DD");
     navigate(`/search-montly-schedule?date=${formattedDate}`);
   };
   //Months infinity scroll
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sept",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
-  const [activeIdx, setActiveIdx] = useState(dayjs().month());
   const handlePrev = () => {
-    setActiveIdx((prevIdx) => (prevIdx - 1 + months.length) % months.length);
+    setActiveMonth((prev) => {
+      if (prev === 0) {
+        setActiveYear((y) => y - 1);
+        return 11;
+      }
+      return prev - 1;
+    });
   };
+
   const handleNext = () => {
-    setActiveIdx((prevIdx) => (prevIdx + 1) % months.length);
+    setActiveMonth((prev) => {
+      if (prev === 11) {
+        setActiveYear((y) => y + 1);
+        return 0;
+      }
+      return prev + 1;
+    });
   };
+
+  const [activeIdx, setActiveIdx] = useState(dayjs().month());
+  // const handlePrev = () => {
+  //   setActiveIdx((prevIdx) => (prevIdx - 1 + months.length) % months.length);
+  // };
+  // const handleNext = () => {
+  //   setActiveIdx((prevIdx) => (prevIdx + 1) % months.length);
+  // };
   // if (loading) return <div>Loading...</div>;
 
   return (
@@ -232,8 +300,9 @@ const Dashboard = () => {
                   Administration
                 </button>
               </Link>
-            ) : (<></>)}
-
+            ) : (
+              <></>
+            )}
 
             <button
               onClick={handleLogout}
@@ -253,12 +322,14 @@ const Dashboard = () => {
           </div>
         </nav>
       </div>
-      <div className="body-content bg-[#ECECEC] mt-[35px] mb-[35px]">
+      <div className="body-content bg-[#ECECEC] mt-[35px] mb-[35px] select-none">
         <div className="w-[1165px] mx-auto py-0">
           {/* <div className="hospital-round relative mb-[18px] bg-[#B4C6D9] px-5 h-[55px] flex items-center justify-center rounded-xl text-center hover:bg-[#657E98] hover:text-white hover:transition hover:duration-300"> */}
           <div className="hospital-round  relative mb-[18px] bg-[#B4C6D9] px-5 h-[55px] flex items-center justify-center rounded-xl text-center">
             <Link to="/hospital-round">
-              <p className="flex items-center justify-center w-[600px] h-[55px] inter-medium text-[20px]">Hospital Rounds</p>
+              <p className="flex items-center justify-center w-[600px] h-[55px] inter-medium text-[20px]">
+                Hospital Rounds
+              </p>
             </Link>
             <Celender
               isCalendarOpen={isCalendarOpen}
@@ -270,8 +341,9 @@ const Dashboard = () => {
             {dates.map((date, index) => (
               <div
                 key={index}
-                className={`item xl:w-[150px] lg:w-[80px] bg-[#B4C6D9] h-[50px] flex justify-center items-center mx-2 rounded-[5px] inter-medium text-[18px] text-center ${date.isSame(selectedDate, "day") ? "active" : ""
-                  }`}
+                className={`item xl:w-[150px] lg:w-[80px] bg-[#B4C6D9] h-[50px] flex justify-center items-center mx-2 rounded-[5px] inter-medium text-[18px] text-center ${
+                  date.isSame(selectedDate, "day") ? "active" : ""
+                }`}
                 onClick={() => handleDateSelectHospitalRound(date)}
               >
                 {date.format("MM/DD")}
@@ -281,7 +353,9 @@ const Dashboard = () => {
           {/* <div className="operative-log mt-10 mb-5 bg-[#B4C6D9] px-5 mt-[40px] mb-[18px] h-[55px] flex justify-center items-center rounded-xl text-center hover:bg-[#657E98] hover:text-white hover:transition hover:duration-300"> */}
           <div className="operative-log relative mt-10 mb-5 bg-[#B4C6D9] px-5 mt-[40px] mb-[18px] h-[55px] flex justify-center items-center rounded-xl text-center">
             <Link to="/oparative-log">
-              <p className="flex items-center justify-center w-[600px] h-[55px] inter-medium text-[20px]">Operative Log</p>
+              <p className="flex items-center justify-center w-[600px] h-[55px] inter-medium text-[20px]">
+                Operative Log
+              </p>
             </Link>
             <Celender2
               isCalendarOpen={isCalendarOpen2}
@@ -292,8 +366,9 @@ const Dashboard = () => {
             {dates.map((date, index) => (
               <div
                 key={index}
-                className={`item xl:w-[150px] lg:w-[80px] bg-[#B4C6D9] h-[50px] flex justify-center items-center mx-2 rounded-[5px] inter-medium text-[18px] text-center ${date.isSame(selectedDate, "day") ? "active" : ""
-                  }`}
+                className={`item xl:w-[150px] lg:w-[80px] bg-[#B4C6D9] h-[50px] flex justify-center items-center mx-2 rounded-[5px] inter-medium text-[18px] text-center ${
+                  date.isSame(selectedDate, "day") ? "active" : ""
+                }`}
                 onClick={() => handleDateSelectOparativeLog(date)}
               >
                 {date.format("MM/DD")}
@@ -303,7 +378,9 @@ const Dashboard = () => {
           {/* <div className="surgery-schedule relative mt-[40px] mb-[18px] bg-[#B4C6D9] px-5 h-[55px] flex justify-center items-center rounded-xl text-center hover:bg-[#657E98] hover:text-white hover:transition hover:duration-300"> */}
           <div className="surgery-schedule relative mt-[40px] mb-[18px] bg-[#B4C6D9] px-5 h-[55px] flex justify-center items-center rounded-xl text-center">
             <Link to="/daily-schedule">
-              <p className="flex items-center justify-center w-[600px] h-[55px] inter-medium text-[20px]">Daily Surgery Schedule</p>
+              <p className="flex items-center justify-center w-[600px] h-[55px] inter-medium text-[20px]">
+                Daily Surgery Schedule
+              </p>
             </Link>
             <Celender1
               isCalendarOpen={isCalendarOpen1}
@@ -323,23 +400,41 @@ const Dashboard = () => {
                   </div>
                 ))} */}
 
-              {daysArray
+              {/* {daysArray
                 .slice(visibleStartIndex, visibleStartIndex + 15)
                 .map((date, index) => (
                   <div
                     key={index}
-                    className={`item w-[57px] text-[14px] border-2 border-black h-[30px] justify-center items-center mx-1 flex rounded-md inter-medium content-center ${date.isSame(selectedDate, "day") ? "active" : ""
-                      }`}
+                    className={`item w-[57px] text-[14px] border-2 border-black h-[30px] justify-center items-center mx-1 flex rounded-md inter-medium content-center ${
+                      date.isSame(selectedDate, "day") ? "active" : ""
+                    }`}
                     onClick={() => handleDateSelectDailySchedule(date)}
                   >
                     {date.format("MM/DD")}
                   </div>
-                ))}
+                ))} */}
+              {visibleDays.map((date, index) => (
+                <div
+                  key={index}
+                  className={`item w-[57px] text-[14px] border-2 border-black h-[30px] justify-center items-center mx-1 flex rounded-md inter-medium content-center ${
+                    date.isSame(selectedDateScroll, "day") ? "active" : ""
+                  }`}
+                  onClick={() => handleDateSelectDailySchedule(date)}
+                >
+                  {date.format("MM/DD")}
+                </div>
+              ))}
             </div>
-            <div className="prev absolute start-5 top-3 border-none bg-[#657E98] border-2 h-[30px] w-[30px] flex justify-center items-center rounded text-white" onClick={scrollLeft}>
+            <div
+              className="prev absolute start-5 top-3 border-none bg-[#657E98] border-2 h-[30px] w-[30px] flex justify-center items-center rounded text-white"
+              onClick={scrollLeftSchedule}
+            >
               <FontAwesomeIcon icon={faAngleLeft} size="xl"></FontAwesomeIcon>
             </div>
-            <div className="next absolute end-5 top-3 border-none bg-[#657E98] border-2 h-[30px] w-[30px] flex justify-center items-center rounded text-white" onClick={scrollRight}>
+            <div
+              className="next absolute end-5 top-3 border-none bg-[#657E98] border-2 h-[30px] w-[30px] flex justify-center items-center rounded text-white"
+              onClick={scrollRightSchedule}
+            >
               <FontAwesomeIcon icon={faAngleRight} size="xl"></FontAwesomeIcon>
             </div>
           </div>
@@ -348,7 +443,7 @@ const Dashboard = () => {
             {/* <div className="Call-Calender mt-[40px] mb-[18px] bg-[#B4C6D9] px-5 h-[55px] flex items-center justify-center rounded-xl text-center hover:bg-[#657E98] hover:text-white hover:transition hover:duration-300"> */}
             <div className="Call-Calender mt-[40px] mb-[18px] bg-[#B4C6D9] px-5 h-[55px] flex items-center justify-center rounded-xl text-center ">
               <p className="inter-medium text-[20px]">
-                Monthly Call Calendar {new Date().getFullYear()}
+                Monthly Call Calendar {activeYear}
               </p>
             </div>
           </Link>
@@ -357,8 +452,9 @@ const Dashboard = () => {
               {months.map((month, idx) => (
                 <div
                   key={idx}
-                  className={`item w-[75px] text-[14px] border-2 border-black h-[30px] mx-1 flex justify-center items-center rounded-md inter-medium content-center ${idx === activeIdx ? "active" : ""
-                    }`}
+                  className={`item w-[75px] text-[14px] border-2 border-black h-[30px] mx-1 flex justify-center items-center rounded-md inter-medium content-center ${
+                    idx === activeMonth ? "active" : ""
+                  }`}
                   onClick={() => handleMontlySchedule(idx)}
                 >
                   {month}

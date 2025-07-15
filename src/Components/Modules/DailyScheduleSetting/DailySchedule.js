@@ -104,6 +104,7 @@ const DailySchedule = () => {
   };
 
   const fetchData = async () => {
+    setLoading(true);
     const timestamp = new Date().getTime();
     const eventDate = selectedDate.utc().format("YYYY-MM-DD");
 
@@ -166,19 +167,24 @@ const DailySchedule = () => {
         scheduleResponse.data;
 
       // Custom surgeon name order
-      // const customSurgeonOrder = ['Brian Myers', 'Ahmad Nuriddin', 'Jose Fernandez', 'Reema Mallick'];
-      // const customSurgeonOrder = ['Sharif Khan', 'Musfiquer', 'Oleraj Hossin', 'Rajib Chowdhury'];
       const customSurgeonOrder = [
-        "Dr. Myers",
-        "Dr. Mallick",
-        "Dr. Nuriddin",
-        "Dr. Fernandez",
+        "Brian Myers",
+        "Ahmad Nuriddin",
+        "Jose Fernandez",
+        "Reema Mallick",
       ];
+      // const customSurgeonOrder = ['Sharif Khan', 'Musfiquer', 'Oleraj Hossin', 'Rajib Chowdhury'];
+      // const customSurgeonOrder = [
+      //   "Dr. Myers",
+      //   "Dr. Mallick",
+      //   "Dr. Nuriddin",
+      //   "Dr. Fernandez",
+      // ];
 
       // Sort the surgeons list based on the custom order
-      const sortedSurgeons = customSurgeonOrder
-        .map((name) => surgeons.find((s) => s.name === name))
-        .filter(Boolean); // skip names not found
+      const sortedSurgeons = [...surgeons].sort(
+        (a, b) => Number(a.user_order) - Number(b.user_order)
+      );
 
       setTimeSlots(times);
       setSurgeons(sortedSurgeons);
@@ -208,6 +214,7 @@ const DailySchedule = () => {
     }
     // Get the HTML string of the modified clone
     const content = originalContent.outerHTML;
+    const date = selectedDate.format("MM/DD/YYYY");
     // Create the iframe
     const printWindow = document.createElement("iframe");
     printWindow.style.position = "absolute";
@@ -223,7 +230,9 @@ const DailySchedule = () => {
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta name="print-color-adjust" content="exact">
       <head>
-        <title>Daily Surgery Schedule</title>
+        <title>Daily Surgery Schedule-${dayjs
+          .utc()
+          .format("MM/DD/YYYY")}</title>
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <link href="/assets/css/style.css" rel="stylesheet">
         <style>
@@ -260,10 +269,29 @@ const DailySchedule = () => {
             #show {
               background: black;
             }
+            .force-border {
+              border: 5px solid #ABABAB !important;
+            }
+            h1{
+              text-align:center;
+              margin: 0 0 60px 0;
+              font-size:  25px;
+              font-weight: 700;
+           
+            }
+              .print-bolds{
+                font-size: 14px;
+                font-weight: 600;
+              }
+              .print-text{
+                font-size: 12px;
+                font-weight: 400;
+              }
           }
         </style>
       </head>
       <body class="bg-white">
+        <h1>Daily Schedule - ${date}</h1>
         ${content}
       </body>
     </html>
@@ -388,8 +416,9 @@ const DailySchedule = () => {
             event.event_location === "others"
               ? event.event_location_text
               : event.event_location ?? "";
-          eventData.patient_name = `${event.patient_first_name || ""} ${event.patient_last_name || ""
-            }`;
+          eventData.patient_name = `${event.patient_first_name || ""} ${
+            event.patient_last_name || ""
+          }`;
           eventData.patient_mrn = `${event.patient_mrn || ""}`;
           eventData.procedure = event.procedure || "";
           if (event.event_location === "PHH MOR") {
@@ -401,7 +430,7 @@ const DailySchedule = () => {
           }
         } else if (event.purpose === "Meeting") {
           eventData.event_note_metting = `${event.event_note || ""}`;
-          eventData.title = event.purpose || "";
+          // eventData.title = event.purpose || "";
           eventData.surgeon_name = event.surgeon || "";
           eventData.procedures = event.procedure || "";
           // eventData.color = "#E6E6E6";
@@ -475,8 +504,8 @@ const DailySchedule = () => {
                   localStorage.role == 3
                     ? "#"
                     : overlap?.id
-                      ? `${overlap.id}`
-                      : "#"
+                    ? `${overlap.id}`
+                    : "#"
                 }
                 diable={localStorage.role == 3 ? true : false}
                 border=""
@@ -595,8 +624,8 @@ const DailySchedule = () => {
               localStorage.role == 3
                 ? "#"
                 : adjustomPm?.AM?.id
-                  ? `${adjustomPm.AM.id}`
-                  : "#"
+                ? `${adjustomPm.AM.id}`
+                : "#"
             }
             diable={localStorage.role == 3 ? true : false}
             //link={adjustomPm?.AM?.id ? `${adjustomPm.AM.id}` : "#"}
@@ -636,8 +665,8 @@ const DailySchedule = () => {
               localStorage.role == 3
                 ? "#"
                 : adjustomPm?.AM?.id
-                  ? `${adjustomPm.AM.id}`
-                  : "#"
+                ? `${adjustomPm.AM.id}`
+                : "#"
             }
             diable={localStorage.role == 3 ? true : false}
             //link={adjustomPm?.PM?.id ? `${adjustomPm.PM.id}` : "#"}
@@ -909,7 +938,7 @@ const DailySchedule = () => {
             <Calendar
               isCalendarOpen={isCalendarOpen}
               setIsCalendarOpen={setIsCalendarOpen}
-              selectedDate = {selectedDate}
+              selectedDate={selectedDate}
             />
           </div>
 
@@ -925,8 +954,9 @@ const DailySchedule = () => {
                 <div
                   key={date.toISOString()}
                   onClick={() => handleDateSelect(date)}
-                  className={`item border-2 border-black sm:px-2 lg:px-1 2xl:px-2 py-1 rounded-md inter-medium text-[14px] content-center ${date.isSame(selectedDate.utc(), "day") ? "active" : ""
-                    }`}
+                  className={`item border-2 border-black sm:px-2 lg:px-1 2xl:px-2 py-1 rounded-md inter-medium text-[14px] content-center ${
+                    date.isSame(selectedDate.utc(), "day") ? "active" : ""
+                  }`}
                 >
                   {date.utc().format("MM/DD")}
                 </div>
@@ -953,8 +983,9 @@ const DailySchedule = () => {
               {daysArray.map((date) => (
                 <div
                   key={date.toISOString()}
-                  className={`item border-2 border-black px-2 py-1 rounded-md inter-medium text-[14px] content-center ${date.isSame(selectedDate, "day") ? "active" : ""
-                    }`}
+                  className={`item border-2 border-black px-2 py-1 rounded-md inter-medium text-[14px] content-center ${
+                    date.isSame(selectedDate, "day") ? "active" : ""
+                  }`}
                   onClick={() => handleDateSelect(date)}
                 >
                   {date.format("MM/DD")}
@@ -981,8 +1012,9 @@ const DailySchedule = () => {
               {daysArray.map((date) => (
                 <div
                   key={date.toISOString()}
-                  className={`item border-2 border-black px-2 py-1 rounded-md inter-medium text-[14px] content-center ${date.isSame(selectedDate, "day") ? "active" : ""
-                    }`}
+                  className={`item border-2 border-black px-2 py-1 rounded-md inter-medium text-[14px] content-center ${
+                    date.isSame(selectedDate, "day") ? "active" : ""
+                  }`}
                   onClick={() => handleDateSelect(date)}
                 >
                   {date.format("MM/DD")}
@@ -998,10 +1030,7 @@ const DailySchedule = () => {
           </div>
         </div>
         {/*daily schedule Data */}
-        <div
-          className="w-90% lg:w-[90%] xl:w-[1200px] 2xl:w-[1400px] mx-auto py-3 relative pt-0 lg:pt-5 mb-10 2xl:px-0 px-5"
-          id="print-schedule"
-        >
+        <div className="w-90% lg:w-[90%] xl:w-[1200px] 2xl:w-[1400px] mx-auto py-3 relative pt-0 lg:pt-5 mb-10 2xl:px-0 px-5">
           <div className="bg-white w-100 px-2 2xl:px-10 rounded-md pt-0 pb-5 shadow-lg">
             <div className="three-items ps-2 2xl:ps-16 pe-[2%] mt-3 pt-3">
               {officeCloseDate.map((item, index) => {
@@ -1021,7 +1050,7 @@ const DailySchedule = () => {
             </div>
             {/* <div className="hidden lg:block"> */}
             <div style={{ overflowX: "auto" }} ref={tableContainerRef}>
-              <table className="surgery-schedule">
+              <table className="surgery-schedule" id="print-schedule">
                 <thead>
                   <tr>
                     <th className="w-[100px] inter-bold text-[18px] text-right">
@@ -1059,8 +1088,9 @@ const DailySchedule = () => {
                     return (
                       <tr key={time}>
                         <td
-                          className={`2xl:w-[100px]  sticky left-[-10px] z-[3] whitespace-nowrap h-[30px] text-right ${isBold ? "font-bold" : ""
-                            }`}
+                          className={`2xl:w-[100px]  sticky left-[-10px] z-[3] whitespace-nowrap h-[30px] text-right ${
+                            isBold ? "font-bold" : ""
+                          }`}
                         >
                           <p className={`${isHidden ? "hidden" : ""}`}>
                             {formattedTime}

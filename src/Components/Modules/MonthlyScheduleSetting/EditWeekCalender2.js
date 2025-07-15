@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  faAngleRight,
-  faAngleLeft,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import { faAngleRight, faAngleLeft, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import dayjs from "dayjs";
 import Constant from "../../../Constant";
 import { AxiosAuthInstance } from "../../../AxiosInterceptors";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 import Preloader from "../../Partials/preLoader";
 
 function EditWeekCalendar({ handleSetRealCount }) {
@@ -30,15 +26,11 @@ function EditWeekCalendar({ handleSetRealCount }) {
 
   const fetchSurgeons = async () => {
     try {
-      const response = await AxiosAuthInstance.get(
-        `${Constant.BASE_URL}/vacation/filter-surgeons`
-      );
+      const response = await AxiosAuthInstance.get(`${Constant.BASE_URL}/vacation/filter-surgeons`);
       setSurgeons(response.data);
     } catch (error) {
       // console.error("Error fetching surgeons:", error);
-      setErrors({
-        fetchSurgeons: "Failed to fetch surgeons. Please try again.",
-      });
+      setErrors({ fetchSurgeons: "Failed to fetch surgeons. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -46,22 +38,16 @@ function EditWeekCalendar({ handleSetRealCount }) {
 
   const fetchVacations = async () => {
     try {
-      const response = await AxiosAuthInstance.get(
-        `${Constant.BASE_URL}/vacation-data`
-      );
+      const response = await AxiosAuthInstance.get(`${Constant.BASE_URL}/vacation-data`);
       if (Array.isArray(response.data.vacations)) {
         setVacations(response.data.vacations);
       } else {
         console.error("Expected array but received:", response.data);
-        setErrors({
-          fetchVacations: "Unexpected response format. Please try again.",
-        });
+        setErrors({ fetchVacations: "Unexpected response format. Please try again." });
       }
     } catch (error) {
       console.error("Error fetching vacations:", error);
-      setErrors({
-        fetchVacations: "Failed to fetch vacations. Please try again.",
-      });
+      setErrors({ fetchVacations: "Failed to fetch vacations. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -72,26 +58,21 @@ function EditWeekCalendar({ handleSetRealCount }) {
     const month = currentDate.month() + 1;
 
     try {
-      const response = await AxiosAuthInstance.get(
-        `${Constant.BASE_URL}/calendar-entries`,
-        {
-          params: { year, month },
-        }
-      );
+      const response = await AxiosAuthInstance.get(`${Constant.BASE_URL}/calendar-entries`, {
+        params: { year, month }
+      });
       const entries = response.data.entries;
       const formattedEntries = entries.reduce((acc, entry) => {
-        const formattedDate = dayjs.utc(entry.date).format("YYYY-MM-DD"); // Sk and Ole
+        const formattedDate = dayjs.utc(entry.date).format('YYYY-MM-DD'); // Sk and Ole
         acc[formattedDate] = entry;
         return acc;
       }, {});
-      setFormData(formattedEntries);
+      setFormData(formattedEntries)
       setCalendarEntries(formattedEntries);
       setOffice(response.data.office);
     } catch (error) {
       console.error("Error fetching calendar entries:", error);
-      setErrors({
-        fetchEntries: "Failed to fetch calendar entries. Please try again.",
-      });
+      setErrors({ fetchEntries: "Failed to fetch calendar entries. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -99,33 +80,18 @@ function EditWeekCalendar({ handleSetRealCount }) {
 
   const handleDeleteVacation = async (id, dateToDelete) => {
     try {
-      const response = await AxiosAuthInstance.post(
-        `${Constant.BASE_URL}/vacation/${id}/delete-date`,
-        { date: dateToDelete }
-      );
+      const response = await AxiosAuthInstance.post(`${Constant.BASE_URL}/vacation/${id}/delete-date`, { date: dateToDelete });
       setVacations((prevVacations) =>
-        prevVacations
-          .map((vacation) => {
-            if (vacation.id === id) {
-              return {
-                ...vacation,
-                vacation_dates: vacation.vacation_dates.filter(
-                  (date) => date !== dateToDelete
-                ),
-              };
-            }
-            return vacation;
-          })
-          .filter((vacation) => vacation.vacation_dates.length > 0)
+        prevVacations.map((vacation) => {
+          if (vacation.id === id) {
+            return { ...vacation, vacation_dates: vacation.vacation_dates.filter(date => date !== dateToDelete) };
+          }
+          return vacation;
+        }).filter(vacation => vacation.vacation_dates.length > 0)
       );
     } catch (error) {
-      console.error(
-        "Error deleting vacation date:",
-        error.response?.data || error.message
-      );
-      setErrors({
-        deleteVacation: "Failed to delete vacation date. Please try again.",
-      });
+      console.error("Error deleting vacation date:", error.response?.data || error.message);
+      setErrors({ deleteVacation: "Failed to delete vacation date. Please try again." });
     }
   };
 
@@ -139,42 +105,33 @@ function EditWeekCalendar({ handleSetRealCount }) {
     console.log("Attempting to delete office entry with ID:", id);
 
     try {
-      const response = await AxiosAuthInstance.post(
-        `${Constant.BASE_URL}/office/${id}/delete-date`
-      );
+      const response = await AxiosAuthInstance.post(`${Constant.BASE_URL}/office/${id}/delete-date`);
 
       if (response.status === 200) {
-        setOffice((prevOffice) =>
-          prevOffice.filter((office) => office.id !== id)
-        );
+        setOffice((prevOffice) => prevOffice.filter((office) => office.id !== id));
         alert("Office close entry deleted successfully.");
       }
     } catch (error) {
-      console.error(
-        "Error deleting office close date:",
-        error.response?.data || error.message
-      );
+      console.error("Error deleting office close date:", error.response?.data || error.message);
       alert("Failed to delete office close date. Please try again.");
     }
   };
 
+
   const currentYear = currentDate.year();
   const currentMonth = currentDate.month();
-  // const firstDayOfMonth = dayjs.utc(currentDate).startOf("month").day() - 1;
-  const firstDayOfMonth =
-    dayjs.utc(currentDate).startOf("month").day() > 0
-      ? dayjs.utc(currentDate).startOf("month").day() - 1
-      : dayjs.utc(currentDate).startOf("month").day() + 6;
+  // const firstDayOfMonth = dayjs.utc(currentDate).startOf("month").day() - 1; 
+  const firstDayOfMonth = dayjs.utc(currentDate).startOf("month").day() > 0 ? dayjs.utc(currentDate).startOf("month").day() - 1 : dayjs.utc(currentDate).startOf("month").day() + 6;
   const daysInMonth = dayjs.utc(currentDate).daysInMonth();
 
   const daysArray = [
     ...Array(firstDayOfMonth).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
   ];
 
   const weeksArray = [];
   for (let i = 0; i < daysArray.length; i += 7) {
-    weeksArray.push(daysArray.slice(i, i + 7));
+    weeksArray.push(daysArray.slice(i, i + 5));
   }
   // console.log(weeksArray)
   const handleMonthClick = (monthIndex) => {
@@ -193,19 +150,17 @@ function EditWeekCalendar({ handleSetRealCount }) {
   // SK
   const handleRealTimeCount = async (newFormData) => {
     try {
-      const response = await AxiosAuthInstance.post(
-        `${Constant.BASE_URL}/call-counter-count-real-time`,
-        {
-          newFormData,
-        }
-      );
+      const response = await AxiosAuthInstance.post(`${Constant.BASE_URL}/call-counter-count-real-time`, {
+        newFormData
+      });
       handleSetRealCount(response.data);
       // console.log('real count2:', response.data);
     } catch (error) {
       console.error("Error:", error);
     }
-  };
+  }
   // end sk
+
 
   const handleSelectChange = (day, event, selectedSurgeonId) => {
     const { name, value } = event.target;
@@ -231,25 +186,25 @@ function EditWeekCalendar({ handleSetRealCount }) {
     setFormData(newFormData); // sk
     handleRealTimeCount(newFormData);
     //END SK CODE
+
   };
+
 
   const Navigate = useNavigate();
   const addMonthData = async () => {
     const entries = [];
-    weeksArray.forEach((week) => {
-      week.forEach((day) => {
+    weeksArray.forEach(week => {
+      week.forEach(day => {
         if (day) {
-          const dateStr = dayjs
-            .utc(`${currentYear}-${currentMonth + 1}-${day}`)
-            .format("YYYY-MM-DD");
+          const dateStr = dayjs.utc(`${currentYear}-${currentMonth + 1}-${day}`).format("YYYY-MM-DD");
           const dayData = formData[dateStr] || {};
 
           entries.push({
             date: dateStr,
-            surgeon_1st: dayData["surgeon_1st"] || null,
-            surgeon_2nd: dayData["surgeon_2nd"] || null,
-            surgeon_o_am: dayData["surgeon_o_am"] || null,
-            surgeon_o_pm: dayData["surgeon_o_pm"] || null,
+            surgeon_1st: dayData['surgeon_1st'] || null,
+            surgeon_2nd: dayData['surgeon_2nd'] || null,
+            surgeon_o_am: dayData['surgeon_o_am'] || null,
+            surgeon_o_pm: dayData['surgeon_o_pm'] || null,
           });
         }
       });
@@ -258,9 +213,7 @@ function EditWeekCalendar({ handleSetRealCount }) {
     // console.log(entries);
     // return
     try {
-      await AxiosAuthInstance.post(`${Constant.BASE_URL}/calendar-add-data`, {
-        entries,
-      });
+      await AxiosAuthInstance.post(`${Constant.BASE_URL}/calendar-add-data`, { entries });
       setErrors({});
       fetchSurgeons();
       fetchVacations();
@@ -271,9 +224,7 @@ function EditWeekCalendar({ handleSetRealCount }) {
       if (error.response && error.response.data && error.response.data.error) {
         setErrors({ updateMonth: error.response.data.error });
       } else {
-        setErrors({
-          updateMonth: "Failed to update month data. Please try again.",
-        });
+        setErrors({ updateMonth: "Failed to update month data. Please try again." });
       }
     }
   };
@@ -295,69 +246,40 @@ function EditWeekCalendar({ handleSetRealCount }) {
         Save Changes
       </button>
       <div className="monthly-call flex justify-between py-5 px-3">
-        {[
-          "Jan.",
-          "Feb.",
-          "Mar.",
-          "Apr.",
-          "May.",
-          "Jun.",
-          "Jul.",
-          "Aug.",
-          "Sept.",
-          "Oct.",
-          "Nov.",
-          "Dec.",
-        ].map((month, idx) => (
-          <div
-            key={idx}
-            className={`item bg-[#B4C6D9] px-5 py-2 rounded-md text-xl ${
-              idx === currentMonth ? "active" : ""
-            }`}
-            onClick={() => handleMonthClick(idx)}
-          >
-            {month}
-          </div>
-        ))}
+        {["Jan.", "Feb.", "Mar.", "Apr.", "May.", "Jun.", "Jul.", "Aug.", "Sept.", "Oct.", "Nov.", "Dec."].map(
+          (month, idx) => (
+            <div
+              key={idx}
+              className={`item bg-[#B4C6D9] px-5 py-2 rounded-md text-xl ${idx === currentMonth ? "active" : ""}`}
+              onClick={() => handleMonthClick(idx)}
+            >
+              {month}
+            </div>
+          )
+        )}
       </div>
 
       <div className="relative text-center py-5">
         <div className="prev absolute start-[35%] top-5 px-3 py-1 text-[#657E98]">
-          <FontAwesomeIcon
-            icon={faAngleLeft}
-            size="xl"
-            className="px-[20px]"
-            onClick={handlePreviousMonth}
-          />
+          <FontAwesomeIcon icon={faAngleLeft} size="xl" className="px-[20px]" onClick={handlePreviousMonth} />
         </div>
         <h1 className="text-2xl inter-bold">
-          {currentDate.format("MMMM")}{" "}
-          <span className="mx-2">{currentYear}</span>
+          {currentDate.format("MMMM")} <span className="mx-2">{currentYear}</span>
         </h1>
         <div className="next absolute end-[35%] top-5 px-3 py-1 text-[#657E98]">
-          <FontAwesomeIcon
-            icon={faAngleRight}
-            size="xl"
-            className="px-[20px]"
-            onClick={handleNextMonth}
-          />
+          <FontAwesomeIcon icon={faAngleRight} size="xl" className="px-[20px]" onClick={handleNextMonth} />
         </div>
       </div>
 
-      <div
-        className="week-calendar"
-        style={{ display: "flex", justifyContent: "center" }}
-      >
+      <div className="week-calendar" style={{display: "flex", justifyContent: "center"}}>
         <table className="edit-weeks">
           <thead>
             <tr>
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-                (day, idx) => (
-                  <th key={idx} className="text-[20px] inter-medium">
-                    {day}
-                  </th>
-                )
-              )}
+              {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day, idx) => (
+                <th key={idx} className="text-[20px] inter-medium">
+                  {day}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -366,15 +288,13 @@ function EditWeekCalendar({ handleSetRealCount }) {
                 {week.map((day, dayIndex) => (
                   <td key={dayIndex}>
                     {day ? (
-                      <div className="edit-select h-full flex flex-col justify-between">
+                      <div className="edit-select">
                         <div className="border-[2px] border-black h-9 text-center w-8 rounded-md flex justify-center items-center">
                           {day}
                         </div>
                         <SurgeonSelect
                           // day={dayjs(`${currentYear}-${currentMonth + 1}-${day}`).format("YYYY-MM-DD")}
-                          day={dayjs
-                            .utc(`${currentYear}-${currentMonth + 1}-${day}`)
-                            .format("YYYY-MM-DD")}
+                          day={dayjs.utc(`${currentYear}-${currentMonth + 1}-${day}`).format("YYYY-MM-DD")}
                           surgeons={surgeons}
                           vacations={vacations}
                           office={office}
@@ -384,6 +304,7 @@ function EditWeekCalendar({ handleSetRealCount }) {
                           onDeleteVacation={handleDeleteVacation}
                           onDeleteOffice={handleDeleteOffice}
                           entries={Object.values(calendarEntries)}
+
                         />
                       </div>
                     ) : (
@@ -400,28 +321,19 @@ function EditWeekCalendar({ handleSetRealCount }) {
   );
 }
 
-const SurgeonSelect = ({
-  formData,
-  day,
-  surgeons,
-  vacations,
-  office,
-  onChange,
-  onDeleteOffice,
-  onDeleteVacation,
-  entries = [],
-}) => {
+const SurgeonSelect = ({ formData, day, surgeons, vacations, office, onChange, onDeleteOffice, onDeleteVacation, entries = [] }) => {
+
+
+
+  // console.log(weekIndex)
   const getOfficeInfo = (date) => {
     const officeGroups = office
-      .filter((office) => office.effective_date_start.includes(date))
+      .filter(office => office.effective_date_start.includes(date))
       .reduce((acc, office) => {
         if (!acc[office.effective_date_start]) {
           acc[office.effective_date_start] = [];
         }
-        acc[office.effective_date_start].push({
-          id: office.id,
-          note: office.note,
-        });
+        acc[office.effective_date_start].push({ id: office.id, note: office.note });
         return acc;
       }, {});
 
@@ -430,22 +342,18 @@ const SurgeonSelect = ({
 
   const officeGroups = getOfficeInfo(day);
   const officeNotes = new Set(
-    Object.values(officeGroups)
-      .flat()
-      .map((o) => o.note)
+    Object.values(officeGroups).flat().map(o => o.note)
   );
+
 
   const getVacationInfo = (date) => {
     const vacationGroups = vacations
-      .filter((vacation) => vacation.vacation_dates.includes(date))
+      .filter(vacation => vacation.vacation_dates.includes(date))
       .reduce((acc, vacation) => {
         if (!acc[vacation.vacation_type]) {
           acc[vacation.vacation_type] = [];
         }
-        acc[vacation.vacation_type].push({
-          id: vacation.id,
-          initial: vacation.user.initial,
-        });
+        acc[vacation.vacation_type].push({ id: vacation.id, initial: vacation.user.initial });
         return acc;
       }, {});
 
@@ -454,31 +362,17 @@ const SurgeonSelect = ({
 
   const vacationGroups = getVacationInfo(day);
   const vacationedSurgeonsInitials = new Set(
-    Object.values(vacationGroups)
-      .flat()
-      .map((v) => v.initial)
+    Object.values(vacationGroups).flat().map(v => v.initial)
   );
-  console.log("Date is", day);
 
   const levels = ["1ST", "2ND", "O AM", "O PM"];
-  const callTypes = [
-    "surgeon_1st",
-    "surgeon_2nd",
-    "surgeon_o_am",
-    "surgeon_o_pm",
-  ];
+  const callTypes = ["surgeon_1st", "surgeon_2nd", "surgeon_o_am", "surgeon_o_pm"];
 
   const getSurgeonEntry = (callType, date) => {
     if (!entries) return null;
-    const entry = entries.find(
-      (entry) =>
-        dayjs.utc(entry.date).format("YYYY-MM-DD") ==
-        dayjs(date).format("YYYY-MM-DD")
-    );
+    const entry = entries.find(entry => dayjs.utc(entry.date).format("YYYY-MM-DD") == dayjs(date).format("YYYY-MM-DD"));
     if (entry && entry[callType]) {
-      const surgeon = surgeons.find(
-        (surgeon) => surgeon.id === entry[callType]
-      );
+      const surgeon = surgeons.find(surgeon => surgeon.id === entry[callType]);
       return surgeon;
     }
     return null;
@@ -486,75 +380,61 @@ const SurgeonSelect = ({
 
   return (
     <>
-      <div className="h-full">
-        {levels.map((level, idx) => {
-          const callType = callTypes[idx];
-          const surgeon = getSurgeonEntry(callType, day);
-          const selectedSurgeonId =
-            formData[day]?.[callType] || surgeon?.id || "";
-          const sat_sun = new Date(day).getDay();
-          if (
-            (level === "O AM" || level === "O PM") &&
-            (sat_sun === 5 || sat_sun === 6)
-          ) {
-            return null;
-          }
-          return (
-            <div className="flex justify-between pt-2" key={idx}>
-              <label
-                htmlFor={`surgeon-${callType}`}
-                className="text-red-500 w-[50px]"
+      {levels.map((level, idx) => {
+        const callType = callTypes[idx];
+        const surgeon = getSurgeonEntry(callType, day);
+        const selectedSurgeonId = formData[day]?.[callType] || surgeon?.id || '';
+
+        return (
+          <div className="flex justify-between pt-2" key={idx}>
+            <label htmlFor={`surgeon-${callType}`} className="text-red-500 w-[50px]">
+              {level}
+            </label>
+            <div className="select-line mx-2"></div>
+            <div className="sltc">
+              <select
+                name={callType}
+                id={`surgeon-${callType}`}
+                onChange={(e) => { onChange(day, e, selectedSurgeonId) }}
+                value={selectedSurgeonId}
+                aria-label={`Surgeon ${callType}`}
               >
-                {level}
-              </label>
-              <div className="select-line mx-2"></div>
-              <div className="sltc">
-                <select
-                  name={callType}
-                  id={`surgeon-${callType}`}
-                  onChange={(e) => {
-                    onChange(day, e, selectedSurgeonId);
-                  }}
-                  value={selectedSurgeonId}
-                  aria-label={`Surgeon ${callType}`}
-                >
-                  <option value="NULL"></option>
+                <option value="NULL"></option>
 
-                  {surgeon && (
-                    <option value={surgeon.id}>{surgeon.initial}</option>
-                  )}
+                {surgeon && (
+                  <option value={surgeon.id}>
+                    {surgeon.initial}
+                  </option>
+                )}
 
-                  {surgeons
-                    .filter(
-                      (s) =>
-                        s.id !== selectedSurgeonId && // Exclude the selected surgeon
-                        !vacationedSurgeonsInitials.has(s.initial) // Optionally exclude vacationed surgeons
-                    )
-                    .map((s) => (
-                      <option value={s.id} key={s.id}>
-                        {s.initial}
-                      </option>
-                    ))}
-                </select>
-              </div>
+                {surgeons
+                  .filter(
+                    (s) =>
+                      s.id !== selectedSurgeonId && // Exclude the selected surgeon
+                      !vacationedSurgeonsInitials.has(s.initial) // Optionally exclude vacationed surgeons
+                  )
+                  .map((s) => (
+                    <option value={s.id} key={s.id}>
+                      {s.initial}
+                    </option>
+                  ))}
+              </select>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
+
 
       <div className="edit-item pt-3">
-        {Object.keys(vacationGroups).map((vacationType) => (
+        {Object.keys(vacationGroups).map(vacationType => (
           <div className="text-[14px] flex pt-[1px]" key={vacationType}>
-            <div className="pe-5 text-[red] w-[70px]">{vacationType}</div>{" "}
-            {vacationGroups[vacationType].map((v) => (
-              <span className="px-1 relative" key={v.id}>
-                {v.initial}
+            <div className="pe-5 text-[red] w-[70px]">{vacationType}</div>  {vacationGroups[vacationType].map(v => (
+              <span className="px-1 relative" key={v.id}>{v.initial}
                 <button
                   className="absolute dlt-x left-[-10px] top-[-5px] close ms-end border-2 border-white h-[30px] w-[30px] rounded-md bg-[#BE4A4E] mx-2 text-white"
                   onClick={() => onDeleteVacation(v.id, day)}
                   key={v.id}
-                  id="close"
-                >
+                  id="close">
                   <FontAwesomeIcon icon={faXmark} size="lg"></FontAwesomeIcon>
                 </button>
               </span>
@@ -563,10 +443,7 @@ const SurgeonSelect = ({
         ))}
 
         {Object.keys(officeGroups).map((officeType) => (
-          <div
-            className="relative text-[14px] flex items-center"
-            key={officeType}
-          >
+          <div className="relative my-2 text-[14px] flex items-center" key={officeType}>
             <span>Closed</span>
             <button
               className="absolute  dlt-x left-0 w-[50px] bg-[#BE4A4E] text-white text-[12px] px-2 py-1 rounded"
@@ -576,6 +453,7 @@ const SurgeonSelect = ({
             </button>
           </div>
         ))}
+
       </div>
     </>
   );

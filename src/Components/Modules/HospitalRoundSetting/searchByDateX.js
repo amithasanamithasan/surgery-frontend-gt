@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Constant from "../../../Constant";
 import { AxiosAuthInstance } from "../../../AxiosInterceptors";
+import { useLocation } from "react-router-dom";
 import MasterNav from "../../Layouts/MasterNav";
 import DeleteModal from "./DeleteModal";
 import WarningModalEdit from "./WarningModalEdit";
@@ -16,13 +17,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Celender1 from "./celender1";
 import WarningModal from "./WarningModal";
 import WarningModalDelete from "./WarningModalDelete";
-import dayjs from 'dayjs'; // Non-minified version
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
-
-// Then extend dayjs with plugins:
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
-dayjs.extend(timezone);
 const SearchByDate = () => {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
@@ -33,22 +30,26 @@ const SearchByDate = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchParams] = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
+
   const [editingId, setEditingId] = useState(null);
   const [currentlyDelete, setCurrentlyDelete] = useState(false);
   const [tempFilterEntries, setTempFilterEntries] = useState([]);
   const navigate = useNavigate();
   const dateParam = searchParams.get("date");
-
+  const location = useLocation();
   const today = dayjs.utc();
   // const dates = Array.from({ length: 7 }, (_, index) =>
   //   today.subtract(index, "day")
   // );
 
+  const query = new URLSearchParams(location.search);
+  const dated = query.get("date");
+
+
   const [selectedEntryId, setSelectedEntryId] = useState(null);
   const [dataEditing, setDataEditing] = useState(false);
   const [warningState, setWarningState] = useState("false");
   const [warning, setWarning] = useState(false);
-  const [isAdd, setIsAdd] = useState(false);
   const [currentlyEdit, setCurrentlyEdit] = useState(false);
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [startDate, setStartDate] = useState(dayjs());
@@ -76,13 +77,7 @@ const SearchByDate = () => {
   const handleDateSelect = (date) => {
     setSelectedDate(date);
   };
-  const isTodayEastern = 
-  (dayjs.utc(dateParam).format("YYYY-MM-DD")) === 
-  dayjs.utc().format("YYYY-MM-DD");
-  console.log(dayjs.utc().tz("America/New_York").format("YYYY-MM-DD"));
-  console.log(dayjs.utc(dateParam).format("YYYY-MM-DD"));
-
-  const fetchEntrieAll = async () => {
+  const fetchEntrieAll = () => {
     AxiosAuthInstance.get(`${Constant.BASE_URL}/hospital-round`)
       .then((response) => {
         const allEntries = response.data.map((entry) => ({
@@ -131,30 +126,13 @@ const SearchByDate = () => {
     const { name, value } = e.target;
     setNewEntry((prev) => ({ ...prev, [name]: value }));
   };
-  const handleInputChanges = (e) => {
-    const { name, value } = e.target;
-    setNewEntrySubmit((prev) => ({ ...prev, [name]: value }));
-  };
+
   const handleClearForm = () => {
-    setNewEntrySubmit({
-      room: "",
-      first_name: "",
-      last_name: "",
-      age: "",
-      mrn: "",
-      diagnosis: "",
-      procedure: "",
-      notes: "Diet: ",
-      facility: "PHH",
-      so: false,
-      dc: false,
-    });
     if (selectedDate.isSame(today, "day")) {
       setDataEditing((prevState) => !prevState);
       if (dataEditing) {
         setIsEditing(false);
         setEditingId(null);
-        // setDataEditing(false);
         setNewEntry({
           room: "",
           first_name: "",
@@ -207,7 +185,6 @@ const SearchByDate = () => {
       fetchData(newDate.format("YYYY-MM-DD"));
     }
   }, [dateParam]);
-console.log(dateParam)
 
   const fetchData = (date) => {
     AxiosAuthInstance.get(
@@ -231,65 +208,6 @@ console.log(dateParam)
         setFilterEntries(nonActiveEntries);
       })
       .catch(handleError);
-  };
-  // Add New Entry
-  const [newEntrySubmit, setNewEntrySubmit] = useState({
-    room: "",
-    first_name: "",
-    last_name: "",
-    age: "",
-    mrn: "",
-    diagnosis: "",
-    procedure: "",
-    notes: "Diet: ",
-    facility: "PHH",
-    so: false,
-    dc: false,
-  });
-  const handleAddEntry = () => {
-    AxiosAuthInstance.post(
-      `${Constant.BASE_URL}/hospital-round`,
-      newEntrySubmit
-    )
-      .then((response) => {
-        setEntries((prevEntries) => [...prevEntries, response.data]);
-        setNewEntrySubmit({
-          room: "",
-          first_name: "",
-          last_name: "",
-          age: "",
-          mrn: "",
-          diagnosis: "",
-          procedure: "",
-          notes: "Diet: ",
-          facility: "PHH",
-          so: false,
-          dc: false,
-        });
-        setIsEditing(false);
-        setIsAdd(false);
-        fetchData(dateParam);
-        setWarningState("false");
-        setErrors(null);
-      })
-      .catch((error) => {
-        if (error.response && error.response.status === 403) {
-          setErrorMessage(
-            "Unauthorized access. You do not have permission to add or update entries."
-          );
-        } else if (
-          error.response &&
-          error.response.data &&
-          error.response.data.errors
-        ) {
-          setErrors(error.response.data.errors);
-        } else {
-          setErrors({ general: "An unexpected error occurred" });
-        }
-      })
-      .finally(() => {
-        // setIsAdd(false);
-      });
   };
 
   const handleSubmit = async () => {
@@ -325,7 +243,6 @@ console.log(dateParam)
       handleClearForm();
       fetchData(selectedDate.format("YYYY-MM-DD"));
       setWarningState("false");
-      setDataEditing(true);
     } catch (error) {
       if (error.response && error.response.status === 423) {
         // Another user updated it, so fetch latest data
@@ -535,7 +452,6 @@ console.log(dateParam)
     const options = { year: "numeric", month: "long" };
     const content = document.getElementById("archive").outerHTML;
     const printWindow = document.createElement("iframe");
-    const date = selectedDate.format("MM/DD/YYYY");
     printWindow.style.position = "absolute";
     printWindow.style.width = "0px";
     printWindow.style.height = "0px";
@@ -548,7 +464,7 @@ console.log(dateParam)
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <meta name="print-color-adjust" content="exact">
             <head>
-                <title>Hospital Rounds</title>
+                <title>Hospital Rounds - ${dated ? dayjs.utc(dated).format("MM/DD/YYYY") : "No Date Selected"}</title>
                 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
                 <link href="/assets/css/style.css" rel="stylesheet">
                 <style>
@@ -599,16 +515,6 @@ console.log(dateParam)
                       color: white;
                       
                     }
-                      #add-entry-row {
-                         display: none;
-                      }
-                        #add-entry-button {
-                          display: none;
-                        } 
-                        #hide-print, #remove-add-print {
-                          display: none;
-                         }
-                      
                       .hight-print{
                       display:flex;
                       justify-content:center;
@@ -616,19 +522,12 @@ console.log(dateParam)
                       height:15px;
                       width:100px;
                       }
-                       h1{
-                           text-align:center;
-                           margin: 0 0 60px 0;
-                           font-size:  25px;
-                           font-weight: 700;
-                        }
                     #hide-print, #remove-add-print{
                       display: none;
                     }
            </style>
             </head>
-           <body class="bg-white">
-              <h1>Hospital Rounds - ${date}</h1>
+            <body class="bg-white">
               ${content}
             </body>
         </html>
@@ -650,7 +549,6 @@ console.log(dateParam)
     const options = { year: "numeric", month: "long" };
     const content = document.getElementById("search").outerHTML;
     const printWindow = document.createElement("iframe");
-    const date= selectedDate.format("MM-DD-YYYY");
     printWindow.style.position = "absolute";
     printWindow.style.width = "0px";
     printWindow.style.height = "0px";
@@ -663,7 +561,7 @@ console.log(dateParam)
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <meta name="print-color-adjust" content="exact">
             <head>
-                <title>Archived Rounds</title>
+                <title>Archived Rounds-${dayjs().format("MM/DD/YYYY")}</title>
                 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
                 <link href="/assets/css/style.css" rel="stylesheet">
                 <style>
@@ -721,23 +619,14 @@ console.log(dateParam)
                       height:15px;
                       width:100px;
                       }
-                      
-                    h1{
-                      text-align:center;
-                      margin: 0 0 60px 0;
-                      font-size:  25px;
-                      font-weight: 700;
-                     
-                    }
                     #hide-print, #remove-add-print{
                       display: none;
                     }
            </style>
             </head>
-           <body class="bg-white">
-             <h1>Archived Rounds - ${date}</h1>
-               ${content}
-           </body>
+            <body class="bg-white">
+              ${content}
+            </body>
         </html>
     `);
     printDocument.close();
@@ -753,8 +642,6 @@ console.log(dateParam)
       }, 1000);
     };
   };
-
-  console.log("Add: ", isAdd, "Edit", dataEditing);
   return (
     <>
       <div className="h-[75px] bg-[#B4C6D9] flex content-center sticky top-0 z-20">
@@ -1050,7 +937,6 @@ console.log(dateParam)
                                         onClick={() => {
                                           handleEdit(entry.id, entry);
                                           setWarningState("true");
-                                          setIsAdd(false);
                                         }}
                                       >
                                         Edit
@@ -1067,13 +953,79 @@ console.log(dateParam)
                                     </div>
                                   </>
                                 )}
-                                
+                                {!dataEditing && (
+                                  <div
+                                    className="absolute top-[35%] left-[76px]"
+                                    id="date-print"
+                                  >
+                                    <button className=" hight-print bg-[#554b49] w-[75px] px-1 py-1 my-2 rounded-[47px] drop-shadow text-[10px] text-[white] font-[300] pointer-events-none">
+                                      {/* {format(new Date(entry.created_at), 'MM/dd/yyyy')} */}
+                                      {/* {format(dayjs.utc(entry.created_at).format(), 'MM/dd/yyyy')} */}
+                                      {dayjs
+                                        .utc(entry.created_at)
+                                        .format("MM/DD/YYYY")}
+                                    </button>
                                   </div>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         </>
                       )
                     )}
+                    {entries &&
+                      (editingId ? (
+                        // <tr className="text-left border-2 inter-medium text-[14px]">
+                        //   <td></td>
+                        //   <td></td>
+                        //   <td></td>
+                        //   <td></td>
+                        //   <td></td>
+                        //   <td>
+                        //     {dayjs.utc(selectedDate).isSame(dayjs.utc(), 'day') && (
+                        //       <button
+                        //         className="drop-shadow-2xl w-[190px] h-[40px] absolute left-[100%] top-[50%] transform -translate-x-1/2 -translate-y-1/2 bg-white cursor-pointer rounded-md hover:bg-[#657E98] hover:text-white z-[9]"
+                        //         onClick={() => {
+                        //           handleClearForm();
+                        //           setWarningState("false");
+                        //         }}
+                        //       >
+                        //         {dataEditing ? "Exit" : "Edit Entries"}
+                        //       </button>
+                        //     )}
+                        //   </td>
+                        //   <td></td>
+                        //   <td></td>
+                        //   <td></td>
+                        // </tr>
+                        <></>
+                      ) : (
+                        <tr className="text-left border-2 inter-medium text-[14px]">
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td>
+                            {dayjs
+                              .utc(selectedDate)
+                              .isSame(dayjs.utc(), "day") && (
+                                <button
+                                  className="drop-shadow-2xl w-[190px] h-[40px] absolute left-[100%] top-[50%] transform -translate-x-1/2 -translate-y-1/2 bg-white cursor-pointer rounded-md hover:bg-[#657E98] hover:text-white z-[9]"
+                                  onClick={() => {
+                                    handleClearForm();
+                                    setWarningState("false");
+                                  }}
+                                >
+                                  {dataEditing ? "Exit" : "Edit Entries"}
+                                </button>
+                              )}
+                          </td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                      ))}
                   </>
                 ) : (
                   <tr>
@@ -1081,226 +1033,6 @@ console.log(dateParam)
                       No entries for the given search criteria.
                     </td>
                   </tr>
-                )}
-                {isAdd && (
-                  <tr className="text-left border-2 inter-medium text-[14px]">
-                    <td style={{ verticalAlign: "top" }}>
-                      <input
-                        type="text"
-                        name="room"
-                        className="w-[60px] h-[80px] mt-[5px] border-[2px] border-[#000] text-center"
-                        value={newEntrySubmit.room}
-                        onChange={handleInputChanges}
-                        required
-                      />
-                      {errors && errors.room && (
-                        <p className="text-red-800">
-                          <small> {errors.room} </small>
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: "top" }}>
-                      <input
-                        type="text"
-                        name="first_name"
-                        className="w-[80px] h-[80px] mt-[5px]  border-[2px] border-[#000] text-center"
-                        value={newEntrySubmit.first_name}
-                        onChange={handleInputChanges}
-                        required
-                      />
-                      {errors && errors.first_name && (
-                        <p className="text-red-800">
-                          <small> {errors.first_name} </small>
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: "top" }}>
-                      <input
-                        type="text"
-                        name="last_name"
-                        className="w-[80px] h-[80px] mt-[5px]  border-[2px] border-[#000] text-center"
-                        value={newEntrySubmit.last_name}
-                        onChange={handleInputChanges}
-                        required
-                      />
-                      {errors && errors.last_name && (
-                        <p className="text-red-800">
-                          <small> {errors.last_name} </small>
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: "top" }}>
-                      <input
-                        type="text"
-                        name="age"
-                        className="w-[50px] h-[80px] mt-[5px] border-[1px] border-[#000] text-center"
-                        value={newEntrySubmit.age}
-                        onChange={handleInputChanges}
-                        required
-                      />
-                      {errors && errors.age && (
-                        <p className="text-red-800">
-                          <small> {errors.age} </small>
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: "top" }}>
-                      <input
-                        type="text"
-                        name="mrn"
-                        className="w-[70px] 2xl:w-[80px] h-[80px] mt-[5px]  border-[1px] border-[#000] text-center"
-                        value={newEntrySubmit.mrn}
-                        onChange={handleInputChanges}
-                        required
-                      />
-                      {errors && errors.mrn && (
-                        <p className="text-red-800">
-                          <small> {errors.mrn} </small>
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: "top" }}>
-                      <textarea
-                        name="diagnosis"
-                        className="w-[150px] 2xl:w-[200px] mt-[5px] h-[80px] border-[1px] border-[#000] overflow-hidden bg-white formx padding"
-                        placeholder="Diagnosis"
-                        value={newEntrySubmit.diagnosis}
-                        onChange={handleInputChanges}
-                        required
-                      ></textarea>
-                      {errors && errors.diagnosis && (
-                        <p className="text-red-800">
-                          <small> {errors.diagnosis} </small>
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: "top" }}>
-                      <textarea
-                        className="w-[150px] 2xl:w-[200px] mt-[5px] h-[80px] border-[1px] border-[#000] overflow-hidden bg-white formx padding"
-                        placeholder="Procedure"
-                        name="procedure"
-                        value={newEntrySubmit.procedure}
-                        onChange={handleInputChanges}
-                        required
-                      ></textarea>
-                      {errors && errors.procedure && (
-                        <p className="text-red-800">
-                          <small> {errors.procedure} </small>
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: "top" }}>
-                      <textarea
-                        className="w-[150px] 2xl:w-[200px] mt-[5px] h-[80px] border-[1px] border-[#000] overflow-hidden bg-white formx padding"
-                        placeholder="Diet: "
-                        name="notes"
-                        value={newEntrySubmit.notes}
-                        onChange={handleInputChanges}
-                        required
-                      ></textarea>
-                      {errors && errors.notes && (
-                        <p className="text-red-800">
-                          <small> {errors.notes} </small>
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: "top" }}>
-                      <input
-                        type="text"
-                        className="w-[50px] h-[75px] border-[1px] mt-[5px] border-[#000] text-center"
-                        name="facility"
-                        value={newEntrySubmit.facility}
-                        onChange={handleInputChanges}
-                        required
-                      />
-                      {errors && errors.facility && (
-                        <p className="text-red-800">
-                          <small> {errors.facility}</small>
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ verticalAlign: "top" }}>
-                      {isAdd && (
-                        <div className="flex flex-col mt-[5px] items-center justify-center gap-y-2">
-                          <button
-                            className="bg-[#58D68D] border-2 border-white px-2 py-1 rounded-md drop-shadow hover:bg-[#52BE80]"
-                            onClick={() => {
-                              handleAddEntry();
-                            }}
-                          >
-                            <FontAwesomeIcon icon={faCheck} size="lg" />
-                          </button>
-                          <button
-                            className="bg-[#EC7063] border-2 border-white px-2 py-1 rounded-md drop-shadow hover:bg-[#E74C3C]"
-                            onClick={() => {
-                              setIsAdd(false);
-                              handleClearForm();
-                              setErrors(false);
-                            }}
-                          >
-                            <FontAwesomeIcon icon={faTimes} size="lg" />
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                )}
-
-                {!isAdd && (
-                  <>
-                    <tr className="text-left border-2 inter-medium text-[14px]">
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td>
-                        {!dataEditing && (
-                          <>
-                            {isTodayEastern && (
-                              <button   id="add-entry-button"
-                                className="  drop-shadow-2xl w-[190px] h-[40px] absolute left-[100%] top-[50%] transform -translate-x-1/2 -translate-y-1/2 bg-white cursor-pointer rounded-md hover:bg-[#657E98] hover:text-white z-[9]"
-                                onClick={() => {
-                                  handleClearForm();
-                                  setWarningState("false");
-                                  setIsAdd(true);
-                                  setDataEditing(true);
-                                }}
-                              >
-                                Add Entries
-                              </button>
-                            )}
-                          </>
-                        )}
-                        {dataEditing &&
-                          isTodayEastern &&
-                          (warningState === "true" ? (
-                            <button 
-                              className="drop-shadow-2xl w-[190px] h-[40px] absolute left-[100%] top-[50%] transform -translate-x-1/2 -translate-y-1/2 bg-white cursor-pointer rounded-md hover:bg-[#657E98] hover:text-white z-[9]"
-                              onClick={() => {
-                                setWarning(true);
-                              }}
-                            >
-                              Exit
-                            </button>
-                          ) : (
-                            <button
-                              className="drop-shadow-2xl w-[190px] h-[40px] absolute left-[100%] top-[50%] transform -translate-x-1/2 -translate-y-1/2 bg-white cursor-pointer rounded-md hover:bg-[#657E98] hover:text-white z-[9]"
-                              onClick={() => {
-                                setIsAdd(false);
-                                setDataEditing(false);
-                                setEditingId(false);
-                              }}
-                            >
-                              Exit
-                            </button>
-                          ))}
-                      </td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  </>
                 )}
               </tbody>
             </table>
@@ -1317,7 +1049,7 @@ console.log(dateParam)
               type="button"
               className="border-none w-[250px] h-[35px] rounded bg-white inter-medium text-[18px] "
             >
-              Print Rounds
+              Print Round
             </button>
             <div className="w-full text-center">
               <h1 className="text-white inter-medium text-[24px]">
@@ -1357,11 +1089,10 @@ console.log(dateParam)
             {dates.map((date, index) => (
               <div
                 key={index}
-                className={`mx-2 w-[150px] h-[30px] bg-[#B4C6D9]  rounded-md py-1 text-center inter-medium text-[14px] ${
-                  date.isSame(selectedDate, "day")
-                    ? "bg-[#D8ADAD] text-white "
-                    : ""
-                }`}
+                className={`item-r mx-2 w-[150px] h-[30px] bg-[#B4C6D9]  rounded-md py-1 text-center inter-medium text-[14px] ${date.isSame(dated, "day")
+                  ? "bg-[#D8ADAD] text-white"
+                  : ""
+                  }`}
                 onClick={() => handleDateSelect(date)}
               >
                 {date.format("MM/DD")}

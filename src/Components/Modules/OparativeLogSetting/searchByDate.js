@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Constant from "../../../Constant";
-import { Navigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { AxiosAuthInstance } from "../../../AxiosInterceptors";
 import MasterNav from "../../Layouts/MasterNav";
 import OperationsToDate from "./operationsToDate ";
@@ -33,14 +33,10 @@ const SearchByDateOL = () => {
   const [warning, setWarning] = useState(false);
   const [warningState, setWarningState] = useState("false");
   const [something, setSomething] = useState("false");
-  const dated = query.get("date");
-  const [selectedDate, setSelectedDate] = useState(
-    dated ? dayjs.utc(dated) : dayjs.utc()
-  );
   const handleToggleEdit = () => {
     setDataEditing(!dataEditing);
   };
-
+  // -------------Added-------------
   const [newEntry, setNewEntry] = useState({
     room: "",
     first_name: "",
@@ -138,18 +134,13 @@ const SearchByDateOL = () => {
       console.error("Error fetching surgeons:", error);
     }
   };
- 
+  // -------------------------------
   useEffect(() => {
     fetchSurgeons();
     if (date) {
       fetchData(date);
     }
   }, [date]);
-  const handleDateSelect = (date) => {
-    const dateformat = date.toISOString ? date.toISOString().split('T')[0] : dayjs(date).format("YYYY-MM-DD");
-    Navigate(`/daily-schedule-search-by-date?date=${dateformat}`);
-    setSelectedDate(dayjs(date));
-  };
 
   const fetchData = (date) => {
     AxiosAuthInstance.get(
@@ -171,6 +162,7 @@ const SearchByDateOL = () => {
     const options = { year: "numeric", month: "long" };
     const content = document.getElementById("archive").outerHTML;
     const printWindow = document.createElement("iframe");
+    const dates = date ? dayjs.utc(date).format("MM/DD/YYYY") : "";
     printWindow.style.position = "absolute";
     printWindow.style.width = "0px";
     printWindow.style.height = "0px";
@@ -183,6 +175,7 @@ const SearchByDateOL = () => {
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <meta name="print-color-adjust" content="exact">
             <head>
+                
                 <title>Operative Log</title>
                 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
                 <link href="/assets/css/style.css" rel="stylesheet">
@@ -241,24 +234,32 @@ const SearchByDateOL = () => {
                       height:15px;
                       width:100px;
                       }
+                      h1{
+                         text-align:center;
+                         margin: 0 0 60px 0;
+                         font-size:  25px;
+                         font-weight: 700;
+                        
+                      }
                     #hide-print, #remove-add-print{
                       display: none;
                     }
            </style>
             </head>
             <body class="bg-white">
-              ${content}
+                <h1>Operative Log - ${dates}</h1>
+                ${content}
             </body>
         </html>
     `);
     printDocument.close();
 
-
+    // Wait for the content to be fully loaded
     printWindow.onload = () => {
       printWindow.contentWindow.focus();
       printWindow.contentWindow.print();
 
-   
+      // Remove the iframe after printing
       setTimeout(() => {
         document.body.removeChild(printWindow);
       }, 1000);
@@ -302,8 +303,6 @@ const SearchByDateOL = () => {
                 <Celender
                   isCalendarOpen={isCalendarOpen}
                   setIsCalendarOpen={setIsCalendarOpen}
-                  selectedDate={selectedDate}
-                  onDateSelect={handleDateSelect}
                 />
               </>
             ) : (

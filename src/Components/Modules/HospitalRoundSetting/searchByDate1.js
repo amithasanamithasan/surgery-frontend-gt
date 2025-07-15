@@ -16,6 +16,7 @@ dayjs.extend(utc);
 const SearchByDate = () => {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
+  const [errorType, setErrorType] = useState("");
   const [entries, setEntries] = useState([]);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [filterEntries, setFilterEntries] = useState([]);
@@ -115,7 +116,7 @@ const SearchByDate = () => {
       setSelectedDate(newDate);
       fetchData(newDate.format("YYYY-MM-DD"));
     }
-  }, [dateParam])
+  }, [dateParam]);
 
   const fetchData = (date) => {
     AxiosAuthInstance.get(
@@ -125,7 +126,7 @@ const SearchByDate = () => {
         // const allEntries = response.data;
         const allEntries = response.data.map((entry) => ({
           ...entry,
-          room: String(entry.room).padStart(2, '0'),
+          room: String(entry.room).padStart(2, "0"),
         }));
         // Filter for active entries based on name
         const activeEntries = allEntries.filter(
@@ -146,16 +147,31 @@ const SearchByDate = () => {
 
     try {
       // Step 1: Update the entry
-      await AxiosAuthInstance.put(`${Constant.BASE_URL}/hospital-round/${editingId}`, newEntry);
+      await AxiosAuthInstance.put(
+        `${Constant.BASE_URL}/hospital-round/${editingId}`,
+        newEntry
+      );
 
       // Step 2: Release the lock after a successful update
-      await AxiosAuthInstance.put(`${Constant.BASE_URL}/hospital-rounds/release-lock/${editingId}`);
+      await AxiosAuthInstance.put(
+        `${Constant.BASE_URL}/hospital-rounds/release-lock/${editingId}`
+      );
       console.log("Edit lock released");
 
       // Step 3: Reset state
       setIsEditing(false);
       setEditingId(null);
-      setNewEntry({ room: "", first_name: "", last_name: "", age: "", mrn: "", diagnosis: "", procedure: "", notes: "", facility: "" });
+      setNewEntry({
+        room: "",
+        first_name: "",
+        last_name: "",
+        age: "",
+        mrn: "",
+        diagnosis: "",
+        procedure: "",
+        notes: "",
+        facility: "",
+      });
       handleClearForm();
       fetchData(selectedDate.format("YYYY-MM-DD"));
       setWarningState("false");
@@ -163,9 +179,13 @@ const SearchByDate = () => {
       if (error.response && error.response.status === 423) {
         // Another user updated it, so fetch latest data
         try {
-          const res = await AxiosAuthInstance.get(`${Constant.BASE_URL}/hospital-round/${editingId}`);
+          const res = await AxiosAuthInstance.get(
+            `${Constant.BASE_URL}/hospital-round/${editingId}`
+          );
           setNewEntry(res.data); // Update form with the latest entry
-          alert("This entry has been updated by another user. Your form has been refreshed.");
+          alert(
+            "This entry has been updated by another user. Your form has been refreshed."
+          );
         } catch (fetchError) {
           console.error("Error fetching updated entry:", fetchError);
         }
@@ -179,7 +199,9 @@ const SearchByDate = () => {
     if (editingId !== null && editingId !== id) {
       // Release the previous lock before locking a new entry
       try {
-        await AxiosAuthInstance.put(`${Constant.BASE_URL}/hospital-rounds/release-lock/${editingId}`);
+        await AxiosAuthInstance.put(
+          `${Constant.BASE_URL}/hospital-rounds/release-lock/${editingId}`
+        );
       } catch (error) {
         console.error("Error releasing previous lock:", error);
       }
@@ -191,7 +213,7 @@ const SearchByDate = () => {
         setEditingId(id);
         setNewEntry(entry);
       })
-      .catch(err => {
+      .catch((err) => {
         // alert("This entry is being edited by someone else. Try again later.");
         setCurrentlyEdit(true);
       });
@@ -200,22 +222,39 @@ const SearchByDate = () => {
   const handleUpdates = async () => {
     if (!editingId) return;
     // Step 1: Release the lock after a successful update
-    await AxiosAuthInstance.put(`${Constant.BASE_URL}/hospital-rounds/release-lock/${editingId}`);
+    await AxiosAuthInstance.put(
+      `${Constant.BASE_URL}/hospital-rounds/release-lock/${editingId}`
+    );
     console.log("Edit lock released");
     // Step 3: Reset state
     setIsEditing(false);
     setEditingId(null);
-    setNewEntry({ room: "", first_name: "", last_name: "", age: "", mrn: "", diagnosis: "", procedure: "", notes: "", facility: "" });
+    setNewEntry({
+      room: "",
+      first_name: "",
+      last_name: "",
+      age: "",
+      mrn: "",
+      diagnosis: "",
+      procedure: "",
+      notes: "",
+      facility: "",
+    });
     handleClearForm();
     fetchData(selectedDate.format("YYYY-MM-DD"));
     setWarningState("false");
   };
 
-
   const handleErrors = (error) => {
     if (error.response && error.response.status === 403) {
-      setErrorMessage("Unauthorized access. You do not have permission to edit entries.");
-    } else if (error.response && error.response.data && error.response.data.errors) {
+      setErrorMessage(
+        "Unauthorized access. You do not have permission to edit entries."
+      );
+    } else if (
+      error.response &&
+      error.response.data &&
+      error.response.data.errors
+    ) {
       setErrors(error.response.data.errors);
     } else {
       setErrorMessage("An unexpected error occurred.");
@@ -232,8 +271,14 @@ const SearchByDate = () => {
       })
       .catch((error) => {
         if (error.response && error.response.status === 403) {
-          setErrorMessage("Unauthorized access. You do not have permission to add or update entries.");
-        } else if (error.response && error.response.data && error.response.data.errors) {
+          setErrorMessage(
+            "Unauthorized access. You do not have permission to add or update entries."
+          );
+        } else if (
+          error.response &&
+          error.response.data &&
+          error.response.data.errors
+        ) {
           setErrors(error.response.data.errors);
         } else {
           setErrors({ general: "An unexpected error occurred" });
@@ -252,28 +297,43 @@ const SearchByDate = () => {
   };
   const warnModal = () => {
     setWarning(true);
-  }
+  };
   const warnClose = () => {
     setWarning(false);
     setWarningState("false");
-  }
+  };
   const toggleCalendar = () => {
     setIsCalendarOpen((prev) => !prev);
   };
   const currentClose = () => {
     setCurrentlyEdit(false);
-  }
+  };
   const handleCheckboxChange = (id, field) => {
     console.log(`Checkbox change: id=${id}, field=${field}`);
-    const updatedField = field === "so" ? { so: true, dc: false } : { so: false, dc: true };
-    AxiosAuthInstance.put(`${Constant.BASE_URL}/hospital-sodc/${id}`, updatedField).then((response) => {
-      console.log("Update response:", response.data);
-      fetchData(dateParam);
-    })
+    const updatedField =
+      field === "so" ? { so: true, dc: false } : { so: false, dc: true };
+    AxiosAuthInstance.put(
+      `${Constant.BASE_URL}/hospital-sodc/${id}`,
+      updatedField
+    )
+      .then((response) => {
+        console.log("Update response:", response.data);
+        fetchData(dateParam);
+      })
       .catch((error) => {
         if (error.response && error.response.status === 403) {
-          setErrorMessage("Unauthorized access. You do not have permission to add or update entries.");
-        } else if (error.response && error.response.data && error.response.data.errors) {
+          setErrorMessage(
+            "Unauthorized access. You do not have permission to add or update entries."
+          );
+        } else if (error.response && error.response.status === 404) {
+          setErrorType(
+            "Unauthorized access. You do not have permission to add or update entries."
+          );
+        } else if (
+          error.response &&
+          error.response.data &&
+          error.response.data.errors
+        ) {
           setErrors(error.response.data.errors);
         } else {
           setErrors({ general: "An unexpected error occurred" });
@@ -281,11 +341,13 @@ const SearchByDate = () => {
       });
   };
 
-
   const UpdateCheckboxChange = (id, field, newValue) => {
     const updatedField = { [field]: newValue };
 
-    AxiosAuthInstance.put(`${Constant.BASE_URL}/hospital-sodcback/${id}`, updatedField)
+    AxiosAuthInstance.put(
+      `${Constant.BASE_URL}/hospital-sodcback/${id}`,
+      updatedField
+    )
       .then((response) => {
         console.log("Individual update response:", response.data);
         fetchData(dateParam);
@@ -297,8 +359,18 @@ const SearchByDate = () => {
 
   const handleError = (error) => {
     if (error.response && error.response.status === 403) {
-      setErrorMessage("Unauthorized access. You do not have permission to add or update entries.");
-    } else if (error.response && error.response.data && error.response.data.errors) {
+      setErrorMessage(
+        "Unauthorized access. You do not have permission to add or update entries."
+      );
+    } else if (error.response && error.response.status === 404) {
+      setErrorType(
+        "Unauthorized access. You do not have permission to add or update entries."
+      );
+    } else if (
+      error.response &&
+      error.response.data &&
+      error.response.data.errors
+    ) {
       setErrors(error.response.data.errors);
     } else {
       setErrors({ general: "An unexpected error occurred" });
@@ -307,8 +379,201 @@ const SearchByDate = () => {
 
   const makeHidden = () => {
     setIsEditing(false);
-  }
+  };
+  const Archivedroundprint = () => {
+    const options = { year: "numeric", month: "long" };
+    const content = document.getElementById("archive").outerHTML;
+    const printWindow = document.createElement("iframe");
+    printWindow.style.position = "absolute";
+    printWindow.style.width = "0px";
+    printWindow.style.height = "0px";
+    printWindow.style.border = "none";
+    document.body.appendChild(printWindow);
+    const printDocument = printWindow.contentWindow.document;
+    printDocument.open();
+    printDocument.write(`
+        <html>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta name="print-color-adjust" content="exact">
+            <head>
+                <title>Hospital Rounds</title>
+                <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+                <link href="/assets/css/style.css" rel="stylesheet">
+                <style>
+                  @media print {
+                    @page {
+                      size: A4 landscape;
+                      margin: none; 
+                    }
+                    body {
+                      font-family: Arial, sans-serif;
+                    }
+                    .page-header, .page-footer {
+                      text-align: center;
+                      font-size: 12px;
+                      color: #333;
+                    }
+                    .hp-round td {
+                      height: 60px !important;
+                    }
+                    .page-header {
+                      margin-bottom: 10px;
+                      border-bottom: 1px solid #ddd;
+                    }
+                    input[class="mark"]:checked+label:after {
+                     width: 15px;
+                     height:15px;
+                     top:0px
+                    }
+                    .page-footer {
+                      margin-top:20px;
+                      border-top: 1px solid #ddd;
+                    }
+       
+                    .print-container {
+                      margin: 0px;
+                    }
+                   
+                    #increase-size{
+                      padding: 0px 100px 50px 20px;
+                    }
+                    #date-print{
+                      position: absolute;
+                      right: -90px;
+                      top: 45%;
+                      transform: translateY(-50%);
+                      background: rgb(82, 74, 70);
+                      border-radius: 25px;
+                      color: white;
+                      
+                    }
+                      .hight-print{
+                      display:flex;
+                      justify-content:center;
+                      align-items:center;
+                      height:15px;
+                      width:100px;
+                      }
+                    #hide-print, #remove-add-print{
+                      display: none;
+                    }
+           </style>
+            </head>
+            <body class="bg-white">
+              ${content}
+            </body>
+        </html>
+    `);
+    printDocument.close();
 
+    // Wait for the content to be fully loaded
+    printWindow.onload = () => {
+      printWindow.contentWindow.focus();
+      printWindow.contentWindow.print();
+
+      // Remove the iframe after printing
+      setTimeout(() => {
+        document.body.removeChild(printWindow);
+      }, 1000);
+    };
+  };
+  const handlePrint = () => {
+    const options = { year: "numeric", month: "long" };
+    const content = document.getElementById("search").outerHTML;
+    const printWindow = document.createElement("iframe");
+    printWindow.style.position = "absolute";
+    printWindow.style.width = "0px";
+    printWindow.style.height = "0px";
+    printWindow.style.border = "none";
+    document.body.appendChild(printWindow);
+    const printDocument = printWindow.contentWindow.document;
+    printDocument.open();
+    printDocument.write(`
+        <html>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta name="print-color-adjust" content="exact">
+            <head>
+                <title>Archived Rounds </title>
+                <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+                <link href="/assets/css/style.css" rel="stylesheet">
+                <style>
+                  @media print {
+                    @page {
+                      size: A4 landscape;
+                      margin: none; 
+                    }
+                    body {
+                      font-family: Arial, sans-serif;
+                    }
+                    .page-header, .page-footer {
+                      text-align: center;
+                      font-size: 12px;
+                      color: #333;
+                    }
+                    .hp-round td {
+                      height: 60px !important;
+                    }
+                    .page-header {
+                      margin-bottom: 10px;
+                      border-bottom: 1px solid #ddd;
+                    }
+                    input[class="mark"]:checked+label:after {
+                     width: 15px;
+                     height:15px;
+                     top:0px
+                    }
+                    .page-footer {
+                      margin-top:20px;
+                      border-top: 1px solid #ddd;
+                    }
+       
+                    .print-container {
+                      margin: 0px;
+                    }
+                   
+                    #increase-sizes{
+                      padding: 0px 100px 50px 20px;
+                    }
+                     #date-prints{
+                      position: absolute;
+                      right: -90px;
+                      top: 45%;
+                      transform: translateY(-50%);
+                      background: rgb(82, 74, 70);
+                      border-radius: 25px;
+                      color: white;
+                      
+                    }
+                      .hight-print{
+                      display:flex;
+                      justify-content:center;
+                      align-items:center;
+                      height:15px;
+                      width:100px;
+                      }
+                    #hide-print, #remove-add-print{
+                      display: none;
+                    }
+           </style>
+            </head>
+            <body class="bg-white">
+              ${content}
+            </body>
+        </html>
+    `);
+    printDocument.close();
+
+    // Wait for the content to be fully loaded
+    printWindow.onload = () => {
+      printWindow.contentWindow.focus();
+      printWindow.contentWindow.print();
+
+      // Remove the iframe after printing
+      setTimeout(() => {
+        document.body.removeChild(printWindow);
+      }, 1000);
+    };
+  };
   return (
     <>
       <div className="h-[75px] bg-[#B4C6D9] flex content-center sticky top-0 z-20">
@@ -339,11 +604,29 @@ const SearchByDate = () => {
                   : "No Date Selected"}
               </span>
             </p>
+            <button
+              onClick={Archivedroundprint}
+              id="hide-print"
+              type="button"
+              className="border-none w-[165px] h-[35px] rounded bg-white mx-2 inter-medium text-[18px]"
+            >
+              Print Rounds
+            </button>
           </div>
         </div>
-
-        <div className="w-[1200px] 2xl:w-[1400px] mx-auto py-3 relative pt-0 mb-10">
-          <div className="bg-white w-full px-10 rounded-md pt-5 pb-10 shadow-lg">
+        {errorType && (
+          <div className="text-red-500 text-center font-medium mb-5">
+            {errorType}
+          </div>
+        )}
+        <div
+          id="archive"
+          className="w-[1200px] 2xl:w-[1400px] mx-auto py-3 relative pt-0 mb-10"
+        >
+          <div
+            id="increase-size"
+            className="bg-white w-full px-10 rounded-md pt-5 pb-10 shadow-lg"
+          >
             <table className="hp-round">
               <thead>
                 <tr className="text-center inter-bold text-[14px]">
@@ -356,16 +639,21 @@ const SearchByDate = () => {
                   <th>Procedure</th>
                   <th>Notes</th>
                   <th>Facility</th>
-                  <th>S/O <br /> D/C</th>
+                  <th>
+                    S/O <br /> D/C
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {entries.length > 0 ? (
                   <>
-                    {entries.map((entry, index) => (
+                    {entries.map((entry, index) =>
                       editingId === entry.id ? (
                         <>
-                          <tr key={index} className="text-left border-2 inter-medium text-[14px]">
+                          <tr
+                            key={index}
+                            className="text-left border-2 inter-medium text-[14px]"
+                          >
                             <td style={{ verticalAlign: "top" }}>
                               <input
                                 type="text"
@@ -462,7 +750,11 @@ const SearchByDate = () => {
                                   }}
                                   className="bg-[#58D68D] border-2 border-white px-2 py-1 rounded-md drop-shadow hover:bg-[#52BE80]"
                                 >
-                                  <FontAwesomeIcon icon={faCheck} className="text-white px-0" size="lg"></FontAwesomeIcon>
+                                  <FontAwesomeIcon
+                                    icon={faCheck}
+                                    className="text-white px-0"
+                                    size="lg"
+                                  ></FontAwesomeIcon>
                                 </button>
                                 <button
                                   onClick={() => {
@@ -472,11 +764,14 @@ const SearchByDate = () => {
                                   }}
                                   className="bg-[#EC7063] border-2 border-white px-2 py-1 rounded-md drop-shadow hover:bg-[#E74C3C]"
                                 >
-                                  <FontAwesomeIcon icon={faTimes} className="text-white px-[2px]" size="lg"></FontAwesomeIcon>
+                                  <FontAwesomeIcon
+                                    icon={faTimes}
+                                    className="text-white px-[2px]"
+                                    size="lg"
+                                  ></FontAwesomeIcon>
                                 </button>
                               </div>
                             </td>
-
                           </tr>
                         </>
                       ) : (
@@ -497,7 +792,11 @@ const SearchByDate = () => {
                             <td>
                               <div className="flex flex-col items-center justify-center gap-y-2">
                                 {entry.is_editing ? (
-                                  <div onClick={() => { setCurrentlyDelete(true) }}>
+                                  <div
+                                    onClick={() => {
+                                      setCurrentlyDelete(true);
+                                    }}
+                                  >
                                     <div className="items pb-1">
                                       <input
                                         className="mark"
@@ -505,7 +804,9 @@ const SearchByDate = () => {
                                         type="checkbox"
                                         name="so"
                                         checked={entry.so}
-                                        onChange={() => handleCheckboxChange(entry.id, "so")}
+                                        onChange={() =>
+                                          handleCheckboxChange(entry.id, "so")
+                                        }
                                         disabled
                                       />
                                       <label htmlFor={`cb4-${index}`}></label>
@@ -518,7 +819,9 @@ const SearchByDate = () => {
                                         type="checkbox"
                                         name="dc"
                                         checked={entry.dc}
-                                        onChange={() => handleCheckboxChange(entry.id, "dc")}
+                                        onChange={() =>
+                                          handleCheckboxChange(entry.id, "dc")
+                                        }
                                         disabled
                                       />
                                       <label htmlFor={`cb5-${index}`}></label>
@@ -533,7 +836,9 @@ const SearchByDate = () => {
                                         type="checkbox"
                                         name="so"
                                         checked={entry.so}
-                                        onChange={() => handleCheckboxChange(entry.id, "so")}
+                                        onChange={() =>
+                                          handleCheckboxChange(entry.id, "so")
+                                        }
                                         disabled={entry.dc}
                                       />
                                       <label htmlFor={`cb4-${index}`}></label>
@@ -546,7 +851,9 @@ const SearchByDate = () => {
                                         type="checkbox"
                                         name="dc"
                                         checked={entry.dc}
-                                        onChange={() => handleCheckboxChange(entry.id, "dc")}
+                                        onChange={() =>
+                                          handleCheckboxChange(entry.id, "dc")
+                                        }
                                         disabled={entry.so}
                                       />
                                       <label htmlFor={`cb5-${index}`}></label>
@@ -567,24 +874,27 @@ const SearchByDate = () => {
                                       </button>
                                     </div>
                                     <div className="absolute bottom-[10px] left-[76px]">
-                                      <button
-                                        className="bg-[#554b49] w-[75px] px-1 py-1 my-2 rounded-[47px] drop-shadow text-[10px] text-[white] font-[300] pointer-events-none"
-                                      >
+                                      <button className="bg-[#554b49] w-[75px] px-1 py-1 my-2 rounded-[47px] drop-shadow text-[10px] text-[white] font-[300] pointer-events-none">
                                         {/* {format(new Date(entry.created_at), 'MM/dd/yyyy')} */}
                                         {/* {format(dayjs.utc(entry.created_at).format(), 'MM/dd/yyyy')} */}
-                                        {dayjs.utc(entry.created_at).format("MM/DD/YYYY")}
+                                        {dayjs
+                                          .utc(entry.created_at)
+                                          .format("MM/DD/YYYY")}
                                       </button>
                                     </div>
                                   </>
                                 )}
                                 {!dataEditing && (
-                                  <div className="absolute top-[35%] left-[76px]">
-                                    <button
-                                      className="bg-[#554b49] w-[75px] px-1 py-1 my-2 rounded-[47px] drop-shadow text-[10px] text-[white] font-[300] pointer-events-none"
-                                    >
+                                  <div
+                                    className="absolute top-[35%] left-[76px]"
+                                    id="date-print"
+                                  >
+                                    <button className=" hight-print bg-[#554b49] w-[75px] px-1 py-1 my-2 rounded-[47px] drop-shadow text-[10px] text-[white] font-[300] pointer-events-none">
                                       {/* {format(new Date(entry.created_at), 'MM/dd/yyyy')} */}
                                       {/* {format(dayjs.utc(entry.created_at).format(), 'MM/dd/yyyy')} */}
-                                      {dayjs.utc(entry.created_at).format("MM/DD/YYYY")}
+                                      {dayjs
+                                        .utc(entry.created_at)
+                                        .format("MM/DD/YYYY")}
                                     </button>
                                   </div>
                                 )}
@@ -593,9 +903,9 @@ const SearchByDate = () => {
                           </tr>
                         </>
                       )
-                    ))}
-                    {entries && (
-                      editingId ? (
+                    )}
+                    {entries &&
+                      (editingId ? (
                         // <tr className="text-left border-2 inter-medium text-[14px]">
                         //   <td></td>
                         //   <td></td>
@@ -628,7 +938,9 @@ const SearchByDate = () => {
                           <td></td>
                           <td></td>
                           <td>
-                            {dayjs.utc(selectedDate).isSame(dayjs.utc(), 'day') && (
+                            {dayjs
+                              .utc(selectedDate)
+                              .isSame(dayjs.utc(), "day") && (
                               <button
                                 className="drop-shadow-2xl w-[190px] h-[40px] absolute left-[100%] top-[50%] transform -translate-x-1/2 -translate-y-1/2 bg-white cursor-pointer rounded-md hover:bg-[#657E98] hover:text-white z-[9]"
                                 onClick={() => {
@@ -644,8 +956,7 @@ const SearchByDate = () => {
                           <td></td>
                           <td></td>
                         </tr>
-                      )
-                    )}
+                      ))}
                   </>
                 ) : (
                   <tr>
@@ -662,10 +973,21 @@ const SearchByDate = () => {
 
       <div className="w-[1200px] 2xl:w-[1400px] mx-auto py-3 relative pt-0 mt-[80px]">
         <div className="relative bg-white w-100 px-10 rounded-md pt-5 pb-10 shadow-lg">
-          <div className="w-[85%] absolute bg-[#657E98] items-center top-[-40px] text-center py-4 rounded-xl m-auto left-0 right-0  flex justify-end px-[2%]">
-            <h1 className="text-white inter-medium text-[24px] me-[300px]">
-              Archived Rounds
-            </h1>
+          <div className="w-[85%] absolute bg-[#657E98] items-center top-[-40px] text-center py-4 rounded-xl m-auto left-0 right-0  flex  px-[2%] justify-between">
+            <button
+              onClick={handlePrint}
+              id="hide-print"
+              type="button"
+              className="border-none w-[165px] h-[35px] rounded bg-white inter-medium text-[18px] "
+            >
+              Print Rounds
+            </button>
+            <div className="w-full text-center">
+              <h1 className="text-white inter-medium text-[24px]">
+                Archived Rounds
+              </h1>
+            </div>
+
             <p>
               {warningState === "true" ? (
                 <>
@@ -684,86 +1006,112 @@ const SearchByDate = () => {
                   />
                 </>
               )}
-
             </p>
           </div>
 
           {/* Table for Filtered Entries */}
-          <table className="hp-round muted mt-[30px]">
-            <thead>
-              <tr className="text-center inter-bold text-[14px]">
-                <th>Room</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>A/G</th>
-                <th>MRN</th>
-                <th>Diagnosis</th>
-                <th>Procedure</th>
-                <th>Notes</th>
-                <th>Facility</th>
-                <th>S/O <br /> D/C</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filterEntries.length > 0 ? (
-                filterEntries.map((filterEntry, index) => (
-                  <tr
-                    key={index}
-                    className="text-left border-2 inter-medium text-[14px]"
-                  >
-                    <td>{filterEntry.room}</td>
-                    <td>{filterEntry.first_name}</td>
-                    <td>{filterEntry.last_name}</td>
-                    <td>{filterEntry.age}</td>
-                    <td>{filterEntry.mrn}</td>
-                    <td>{filterEntry.diagnosis}</td>
-                    <td>{filterEntry.procedure}</td>
-                    <td>{filterEntry.notes}</td>
-                    <td>{filterEntry.facility}</td>
-                    <td>
-                      <div className="flex flex-col items-center justify-center gap-y-2">
-                        <input
-                          className="mark"
-                          id={`cb4-back-${index}`}
-                          type="checkbox"
-                          name="so"
-                          checked={filterEntry.so}
-                          onChange={() => UpdateCheckboxChange(filterEntry.id, "so", !filterEntry.so)}
-                          disabled={filterEntry.is_archived === 1 || filterEntry.dc === 1}
-                        />
-                        <label htmlFor={`cb4-back-${index}`}></label>
-
-                        <input
-                          className="mark"
-                          id={`cb5-back-${index}`}
-                          type="checkbox"
-                          name="dc"
-                          checked={filterEntry.dc}
-                          onChange={() => UpdateCheckboxChange(filterEntry.id, "dc", !filterEntry.dc)}
-                          disabled={filterEntry.is_archived === 1 || filterEntry.so === 1}
-                        />
-                        <label htmlFor={`cb5-back-${index}`}></label>
-                      </div>
-                      <div className="absolute top-[35%] left-[76px]">
-                        <button
-                          className="bg-[#554b49] w-[75px] px-1 py-1 my-2 rounded-[47px] drop-shadow text-[10px] text-[white] font-[300] pointer-events-none"
-                        >
-                          {/* {format(new Date(filterEntry.created_at), 'MM/dd/yyyy')} */}
-                          {dayjs.utc(filterEntry.created_at).format("MM/DD/YYYY")}
-                        </button>
-                      </div>
-                    </td>
+          <div id="search">
+            <div id="increase-sizes">
+              <table className="hp-round mt-[30px]">
+                <thead>
+                  <tr className="text-center inter-bold text-[14px]">
+                    <th>Room</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>A/G</th>
+                    <th>MRN</th>
+                    <th>Diagnosis</th>
+                    <th>Procedure</th>
+                    <th>Notes</th>
+                    <th>Facility</th>
+                    <th>
+                      S/O <br /> D/C
+                    </th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="10" className="text-center">
-                    No entries for this date.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {filterEntries.length > 0 ? (
+                    filterEntries.map((filterEntry, index) => (
+                      <tr
+                        key={index}
+                        className="text-left border-2 inter-medium text-[14px]"
+                      >
+                        <td>{filterEntry.room}</td>
+                        <td>{filterEntry.first_name}</td>
+                        <td>{filterEntry.last_name}</td>
+                        <td>{filterEntry.age}</td>
+                        <td>{filterEntry.mrn}</td>
+                        <td>{filterEntry.diagnosis}</td>
+                        <td>{filterEntry.procedure}</td>
+                        <td>{filterEntry.notes}</td>
+                        <td>{filterEntry.facility}</td>
+                        <td>
+                          <div className="flex flex-col items-center justify-center gap-y-2">
+                            <input
+                              className="mark"
+                              id={`cb4-back-${index}`}
+                              type="checkbox"
+                              name="so"
+                              checked={filterEntry.so}
+                              onChange={() =>
+                                UpdateCheckboxChange(
+                                  filterEntry.id,
+                                  "so",
+                                  !filterEntry.so
+                                )
+                              }
+                              disabled={
+                                filterEntry.is_archived === 1 ||
+                                filterEntry.dc === 1
+                              }
+                            />
+                            <label htmlFor={`cb4-back-${index}`}></label>
+
+                            <input
+                              className="mark"
+                              id={`cb5-back-${index}`}
+                              type="checkbox"
+                              name="dc"
+                              checked={filterEntry.dc}
+                              onChange={() =>
+                                UpdateCheckboxChange(
+                                  filterEntry.id,
+                                  "dc",
+                                  !filterEntry.dc
+                                )
+                              }
+                              disabled={
+                                filterEntry.is_archived === 1 ||
+                                filterEntry.so === 1
+                              }
+                            />
+                            <label htmlFor={`cb5-back-${index}`}></label>
+                          </div>
+                          <div
+                            id="date-prints"
+                            className="absolute top-[35%] left-[76px]"
+                          >
+                            <button className=" hight-print bg-[#554b49] w-[75px] px-1 py-1 my-2 rounded-[47px] drop-shadow text-[10px] text-[white] font-[300] pointer-events-none">
+                              {/* {format(new Date(filterEntry.created_at), 'MM/dd/yyyy')} */}
+                              {dayjs
+                                .utc(filterEntry.created_at)
+                                .format("MM/DD/YYYY")}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="10" className="text-center">
+                        No entries for this date.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -90,7 +90,6 @@ const SearchByDateDs = () => {
     }
   }, [selectedDate]);
 
-
   const scrollLeft = () => {
     setStartDate((prev) => prev.clone().subtract(1, "day"));
   };
@@ -100,7 +99,9 @@ const SearchByDateDs = () => {
   };
 
   const handleDateSelect = (date) => {
-    const dateformat = date.toISOString ? date.toISOString().split('T')[0] : dayjs(date).format("YYYY-MM-DD");
+    const dateformat = date.toISOString
+      ? date.toISOString().split("T")[0]
+      : dayjs(date).format("YYYY-MM-DD");
     navigate(`/daily-schedule-search-by-date?date=${dateformat}`);
     setSelectedDate(dayjs(date));
   };
@@ -173,18 +174,23 @@ const SearchByDateDs = () => {
         scheduleRes.data;
       // Custom surgeon name order
       // const customSurgeonOrder = ['Sharif Khan', 'Musfiquer', 'Oleraj Hossin', 'Rajib Chowdhury'];
-      const customSurgeonOrder = [
-        "Dr. Myers",
-        "Dr. Mallick",
-        "Dr. Nuriddin",
-        "Dr. Fernandez",
-      ];
+      // const customSurgeonOrder = [
+      //   "Dr. Myers",
+      //   "Dr. Mallick",
+      //   "Dr. Nuriddin",
+      //   "Dr. Fernandez",
+      // ];
 
-      // const customSurgeonOrder = ['Brian Myers', 'Ahmad Nuriddin', 'Jose Fernandez', 'Reema Mallick'];
+      const customSurgeonOrder = [
+        "Brian Myers",
+        "Ahmad Nuriddin",
+        "Jose Fernandez",
+        "Reema Mallick",
+      ];
       // Sort the surgeons list based on the custom order
-      const sortedSurgeons = customSurgeonOrder
-        .map((name) => surgeons.find((s) => s.name === name))
-        .filter(Boolean); // skip names not found
+      const sortedSurgeons = [...surgeons].sort(
+        (a, b) => Number(a.user_order) - Number(b.user_order)
+      );
 
       setSchedule(surgeon_events);
       setTimeSlots(times);
@@ -226,6 +232,7 @@ const SearchByDateDs = () => {
     }
     // Get the HTML string of the modified clone
     const content = originalContent.outerHTML;
+    const date = selectedDate.format("MM/DD/YYYY");
     // Create the iframe
     const printWindow = document.createElement("iframe");
     printWindow.style.position = "absolute";
@@ -240,7 +247,9 @@ const SearchByDateDs = () => {
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta name="print-color-adjust" content="exact">
       <head>
-        <title>Daily Surgery Schedule</title>
+        <title>Daily Surgery Schedule-- ${
+          dated ? dayjs.utc(dated).format("MM/DD/YYYY") : "No Date Selected"
+        }</title>
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <link href="/assets/css/style.css" rel="stylesheet">
         <style>
@@ -277,10 +286,26 @@ const SearchByDateDs = () => {
             #show {
               background: black;
             }
+               h1{
+              text-align:center;
+              margin: 0 0 60px 0;
+              font-size:  25px;
+              font-weight: 700;
+              text-decoration: underline;
+            }
+              .print-bolds{
+                font-size: 14px;
+                font-weight: 600;
+              }
+              .print-text{
+                font-size: 12px;
+                font-weight: 400;
+              }
           }
         </style>
       </head>
       <body class="bg-white">
+       <h1>Daily Schedule - ${date}</h1>
         ${content}
       </body>
     </html>
@@ -429,8 +454,9 @@ const SearchByDateDs = () => {
             event.event_location === "others"
               ? event.event_location_text
               : event.event_location ?? "";
-          eventData.patient_name = `${event.patient_first_name || ""} ${event.patient_last_name || ""
-            }`;
+          eventData.patient_name = `${event.patient_first_name || ""} ${
+            event.patient_last_name || ""
+          }`;
           eventData.procedure = event.procedure || "";
           eventData.patient_mrn = `${event.patient_mrn || ""}`;
           if (event.event_location === "PHH MOR") {
@@ -441,7 +467,7 @@ const SearchByDateDs = () => {
             eventData.color = "#BAD9C3";
           }
         } else if (event.purpose === "Meeting") {
-          eventData.title = event.purpose || "";
+          // eventData.title = event.purpose || "";
           eventData.event_note_metting = `${event.event_note || ""}`;
           eventData.surgeon_name = event.surgeon || "";
           eventData.procedures = event.procedure || "";
@@ -483,8 +509,8 @@ const SearchByDateDs = () => {
                   localStorage.role == 3
                     ? "#"
                     : overlap?.id
-                      ? `${overlap.id}`
-                      : "#"
+                    ? `${overlap.id}`
+                    : "#"
                 }
                 diable={localStorage.role == 3 ? true : false}
                 border=""
@@ -617,8 +643,8 @@ const SearchByDateDs = () => {
               localStorage.role == 3
                 ? "#"
                 : adjustomPm?.AM?.id
-                  ? `${adjustomPm.AM.id}`
-                  : "#"
+                ? `${adjustomPm.AM.id}`
+                : "#"
             }
             diable={localStorage.role == 3 ? true : false}
             adjust={true}
@@ -656,8 +682,8 @@ const SearchByDateDs = () => {
               localStorage.role == 3
                 ? "#"
                 : adjustomPm?.AM?.id
-                  ? `${adjustomPm.AM.id}`
-                  : "#"
+                ? `${adjustomPm.AM.id}`
+                : "#"
             }
             diable={localStorage.role == 3 ? true : false}
             adjust={true}
@@ -978,16 +1004,13 @@ const SearchByDateDs = () => {
         </div>
         {/*daily schedule Data */}
         {/* <div className="w-90% sm:w-[600px] lg:w-[960px] xl:w-[1200px] 2xl:w-[1400px] mx-auto py-3 relative pt-0 lg:pt-10 mb-10 2xl:px-0 px-5"> */}
-        <div
-          className="w-90% lg:w-[90%] xl:w-[1200px] 2xl:w-[1400px] mx-auto py-3 relative pt-0 lg:pt-2 mb-10 2xl:px-0 px-5"
-          id="print-schedule"
-        >
+        <div className="w-90% lg:w-[90%] xl:w-[1200px] 2xl:w-[1400px] mx-auto py-3 relative pt-0 lg:pt-2 mb-10 2xl:px-0 px-5">
           <div className="bg-white w-100 px-2 2xl:px-10 rounded-md pb-10 shadow-lg">
             {/* {schedule.length === 0 && omPm.surgeon_o_am.length == 0 && omPm.surgeon_o_pm.length === 0 && vacations.length === 0 ? ( */}
             {(schedule?.length ?? 0) &&
-              (omPm?.surgeon_o_am?.length ?? 0) &&
-              (omPm?.surgeon_o_pm?.length ?? 0) &&
-              (vacations?.length ?? 0) ? (
+            (omPm?.surgeon_o_am?.length ?? 0) &&
+            (omPm?.surgeon_o_pm?.length ?? 0) &&
+            (vacations?.length ?? 0) ? (
               <p className="text-center text-[18px] inter-bold py-5">
                 Data are not available on this date
               </p>
@@ -1013,7 +1036,7 @@ const SearchByDateDs = () => {
                 </div>
                 <div style={{ overflowX: "auto" }} ref={tableContainerRef}>
                   {/* <div className="hidden lg:block"> */}
-                  <table className="surgery-schedule">
+                  <table className="surgery-schedule" id="print-schedule">
                     <thead>
                       <tr>
                         <th className="w-[100px] inter-bold text-[18px] text-right">
@@ -1060,8 +1083,9 @@ const SearchByDateDs = () => {
                         return (
                           <tr key={time}>
                             <td
-                              className={`2xl:w-[100px] sticky left-[-10px] z-[3] h-[30px] text-right whitespace-nowrap ${isBold ? "font-bold" : ""
-                                }`}
+                              className={`2xl:w-[100px] sticky left-[-10px] z-[3] h-[30px] text-right whitespace-nowrap ${
+                                isBold ? "font-bold" : ""
+                              }`}
                             >
                               <p className={`${isHidden ? "hidden" : ""}`}>
                                 {formattedTime}

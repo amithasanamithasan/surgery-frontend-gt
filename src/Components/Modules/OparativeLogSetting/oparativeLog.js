@@ -31,24 +31,24 @@ const OparativeLog = () => {
   // arrow start
   const [startDate, setStartDate] = useState(dayjs().startOf("day"));
   const [selectedDate, setSelectedDate] = useState(dayjs().startOf("day"));
-  const dates = Array.from({ length: 7 }, (_, i) => startDate.add(i, "day"));
+  const dates = Array.from({ length: 7 }, (_, i) => startDate.subtract(i, "day"));
   // arrow end
 
   const handleRight = () => {
-    const rightmostDate = startDate.add(6, "day");
+    const rightmostDate = startDate.subtract(6, "day");
     if (selectedDate.isSame(rightmostDate, "day")) {
-      setStartDate((prev) => prev.add(1, "day"));
-      setSelectedDate((prev) => prev.add(1, "day"));
-    } else {
-      setSelectedDate((prev) => prev.add(1, "day"));
-    }
-  };
-  const handleLeft = () => {
-    if (selectedDate.isSame(startDate, "day")) {
       setStartDate((prev) => prev.subtract(1, "day"));
       setSelectedDate((prev) => prev.subtract(1, "day"));
     } else {
       setSelectedDate((prev) => prev.subtract(1, "day"));
+    }
+  };
+  const handleLeft = () => {
+    if (selectedDate.isSame(startDate, "day")) {
+      setStartDate((prev) => prev.add(1, "day"));
+      setSelectedDate((prev) => prev.add(1, "day"));
+    } else {
+      setSelectedDate((prev) => prev.add(1, "day"));
     }
   };
   const sortedFilteredEntries = filterEntries.sort(
@@ -368,7 +368,7 @@ const OparativeLog = () => {
     printWindow.style.height = "0px";
     printWindow.style.border = "none";
     document.body.appendChild(printWindow);
-
+    const date = selectedDate.format("MM/DD/YYYY");
     const printDocument = printWindow.contentWindow.document;
     printDocument.open();
     printDocument.write(`
@@ -403,13 +403,20 @@ const OparativeLog = () => {
               background-color: #f2f2f2;
               text-align: center;
             }
+              h1{
+               text-align:center;
+               margin: 0 0 60px 0;
+               font-weight: 700;
+               font-size: 20px;
+               }
             .no-print {
               display: none !important;
             }
           }
         </style>
       </head>
-      <body>
+     <body class="bg-white">
+        <h1> Operative Log - ${date}</h1>
         ${printContent.outerHTML}
       </body>
     </html>
@@ -567,7 +574,6 @@ const OparativeLog = () => {
                   <Celender
                     isCalendarOpen={isCalendarOpen}
                     setIsCalendarOpen={setIsCalendarOpen}
-                  // selectedDates={selectedDate}
                   />
                 </>
               ) : (
@@ -609,7 +615,7 @@ const OparativeLog = () => {
             ))}
             <div
               className="prev start-5 top-3 border-none bg-[#657E98] border-2 h-[30px] w-[30px] flex justify-center items-center rounded text-white"
-              onClick={handleRight}
+              onClick={ handleRight}
             >
               {" "}
               <FontAwesomeIcon icon={faAngleRight} size="xl" />
@@ -837,6 +843,7 @@ const OparativeLog = () => {
                 ) : (
                   <tr></tr>
                 )}
+
                 {isAdd && (
                   <tr className="text-left border-2 inter-medium text-[14px]">
                     <td style={{ verticalAlign: "top" }}>
@@ -1025,6 +1032,7 @@ const OparativeLog = () => {
                     <td></td>
                   </tr>
                 )}
+
               </tbody>
             </table>
           </div>

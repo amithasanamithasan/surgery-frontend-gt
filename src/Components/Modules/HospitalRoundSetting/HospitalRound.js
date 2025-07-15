@@ -554,7 +554,7 @@ const HospitalRound = () => {
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <meta name="print-color-adjust" content="exact">
             <head>
-                <title>Hospital Rounds</title>
+                <title>Hospital Rounds </title>
                 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
                 <link href="/assets/css/style.css" rel="stylesheet">
                 <style>
@@ -625,6 +625,7 @@ const HospitalRound = () => {
     const options = { year: "numeric", month: "long" };
     const content = document.getElementById("archive").outerHTML;
     const printWindow = document.createElement("iframe");
+    const date= selectedDate.format("MM/DD/YYYY");
     printWindow.style.position = "absolute";
     printWindow.style.width = "0px";
     printWindow.style.height = "0px";
@@ -695,14 +696,23 @@ const HospitalRound = () => {
                       height:15px;
                       width:100px;
                       }
+                       h1{
+                         text-align:center;
+                         margin: 0 0 60px 0;
+                         font-size:  25px;
+                         font-weight: 700;
+                        
+                       }
                     #hide-print, #remove-add-print{
                       display: none;
                     }
            </style>
             </head>
-            <body class="bg-white">
-              ${content}
-            </body>
+            
+          <body class="bg-white">
+             <h1>Archived Rounds - ${date}</h1>
+             ${content}
+          </body>
         </html>
     `);
     printDocument.close();
@@ -746,7 +756,8 @@ const HospitalRound = () => {
             </p>
 
             <button
-              onClick={handlePrint}
+              onClick={
+                handlePrint}
               id="hide-print"
               type="button"
               className="border-none w-[165px] h-[35px] rounded bg-white mx-2 inter-medium text-[18px]"
@@ -1359,7 +1370,7 @@ const HospitalRound = () => {
               </>
             )}
           </div>
-{/* date ribbon start  */}
+
           <div className="round-list pb-10 pt-[60px] w-[85%] mx-auto flex justify-between select-none">
             <div
               className="prev start-5 top-3 border-none bg-[#657E98] border-2 h-[30px] w-[30px] flex justify-center items-center rounded text-white"
@@ -1403,7 +1414,7 @@ const HospitalRound = () => {
               <FontAwesomeIcon icon={faAngleRight} size="xl" />
             </div>
           </div>
-{/* date ribbo End  */}
+
           {errorMessage && (
             <div className="text-red-500 text-center font-medium mt-5">
               {errorMessage}
